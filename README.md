@@ -20,6 +20,35 @@ Luminair UI does not hardcode forms for collections. Instead:
 
 ---
 
+## State Management Analysis
+
+For the Luminair CMS Admin Console, we evaluated four state management paradigms to decide which is the best fit:
+
+### 1. Zustand (Flux-based Store)
+- **Pros**: Extremely simple, zero boilerplate, hooks-based, high performance, and operates outside of the React render tree (avoiding unnecessary Context re-renders).
+- **Cons**: Monolithic store structure; does not natively represent atomic reactive graphs.
+- **Verdict**: **Recommended for Global UI State** (e.g., sidebar collapsed state, active theme, authenticated user, global selected locales).
+
+### 2. Jotai (Atomic State)
+- **Pros**: Bottom-up reactive atoms, granular re-renders, extremely flexible.
+- **Cons**: State definitions can easily scatter without structured organization.
+- **Verdict**: **Excellent for Dynamic/Complex Field Creators** (e.g., dynamic component page builders or nested content structure editors).
+
+### 3. Recoil (Atomic State)
+- **Pros**: Powerful dependency-graph tracing.
+- **Cons**: Large bundle size, stalled project development, and poor support for React 19 concurrent features.
+- **Verdict**: **Not Recommended** due to project maintenance status.
+
+### 4. Signals (Reactive Nodes)
+- **Pros**: Fine-grained reactivity that updates the DOM directly, bypassing React's virtual DOM reconciliation loop.
+- **Cons**: Integrates awkwardly with React's functional render cycle, lacks native React devtool tooling, and increases code complexity.
+- **Verdict**: **Not Recommended** for general CMS form layouts.
+
+### Final Selection for Luminair CMS
+We choose **Zustand** as our primary global state manager. It is lightweight, straightforward, and scales perfectly for admin panels. Highly dynamic form fields will rely on **Ant Design Form's built-in store** (which manages local field validation and dependencies locally and efficiently), while server state caching is handled by **TanStack Query**.
+
+---
+
 ## Implementation Plan
 
 ### Phase 1: Project Setup & Shell Layout
