@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { useParams } from 'react-router-dom';
 import { Typography, Table, Tag, Card, Space, Row, Col, Spin, Empty } from 'antd';
-import { useDocumentTypes, useDetailedDocumentType, Attribute, FieldConstraint } from '@/api';
+import { useDocumentTypes, useDetailedDocumentType, Attribute, FieldConstraint, isRelationAttribute } from '@/api';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -70,7 +70,7 @@ const DetailedSchemaCard: FC<{ id: string }> = ({ id }) => {
       title: 'Type / Connection',
       key: 'type',
       render: (_: unknown, record: Attribute) => {
-        if (record.relation) {
+        if (isRelationAttribute(record)) {
           return (
             <Space>
               <Tag color="cyan">Relation</Tag>

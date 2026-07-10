@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { useParams } from 'react-router-dom';
 import { Typography, Button, Table, Tag, Card, Space, Spin, Empty, Badge } from 'antd';
-import { useDetailedDocumentType, useDocuments, DocumentRecord } from '@/api';
+import { useDetailedDocumentType, useDocuments, DocumentRecord, isRelationAttribute } from '@/api';
 import { PlusOutlined } from '@ant-design/icons';
 
 const { Title, Paragraph, Text } = Typography;
@@ -54,7 +54,7 @@ export const DocumentListView: FC = () => {
 
   // Map fields (ignoring relations for lists, or showing target tags)
   schema.attributes.forEach((attr) => {
-    if (attr.relation) {
+    if (isRelationAttribute(attr)) {
       dynamicColumns.push({
         title: attr.id,
         dataIndex: attr.id,

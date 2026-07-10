@@ -24,6 +24,7 @@ export interface FieldConstraint {
 }
 
 export interface FieldAttribute {
+  id: string;
   type: string;
   unique: boolean;
   required: boolean;
@@ -31,19 +32,16 @@ export interface FieldAttribute {
 }
 
 export interface RelationAttribute {
+  id: string;
   relation: string;
   target: string;
 }
 
-export interface Attribute {
-  id: string;
-  type?: string;
-  unique?: boolean;
-  required?: boolean;
-  constraints?: FieldConstraint[];
-  relation?: string;
-  target?: string;
-}
+export type Attribute = FieldAttribute | RelationAttribute;
+
+export const isRelationAttribute = (attr: Attribute): attr is RelationAttribute => {
+  return 'relation' in attr;
+};
 
 export interface DetailedDocumentResponse {
   id: string;
