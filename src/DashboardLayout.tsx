@@ -1,5 +1,5 @@
 import { useState, FC } from 'react';
-import { Layout, Menu, Button, theme, Space } from 'antd';
+import { Layout, Menu, Button, theme, Space, Spin } from 'antd';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import {
   MenuFoldOutlined,
@@ -8,21 +8,30 @@ import {
   SettingOutlined,
   AppstoreOutlined,
 } from '@ant-design/icons';
+import { useDocumentTypes } from '@/api';
 
 const { Header, Sider, Content } = Layout;
 
 export const DashboardLayout: FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { data: documentTypes, isLoading } = useDocumentTypes();
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
+  // Dynamic Sidebar Menu Items
   const menuItems = [
     {
-      key: '/',
+      key: 'content-manager',
       icon: <DatabaseOutlined />,
-      label: <Link to="/">Content Manager</Link>,
+      label: 'Content Manager',
+      children: documentTypes
+        ? documentTypes.map((type) => ({
+            key: `/documents/${type.id}`,
+            label: <Link to={`/documents/${type.id}`}>{type.title}</Link>,
+          }))
+        : [],
     },
     {
       key: '/schemas',
@@ -49,13 +58,21 @@ export const DashboardLayout: FC = () => {
             {!collapsed && <span style={{ fontWeight: 'bold', fontSize: 16, color: '#f8fafc' }}>Luminair</span>}
           </Space>
         </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          items={menuItems}
-          style={{ background: '#1e293b' }}
-        />
+        
+        {isLoading && !documentTypes ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
+            <Spin size="small" />
+          </div>
+        ) : (
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            defaultOpenKeys={['content-manager']}
+            items={menuItems}
+            style={{ background: '#1e293b' }}
+          />
+        )}
       </Sider>
       <Layout>
         <Header style={{ padding: '0 16px', background: colorBgContainer, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
