@@ -9,7 +9,7 @@ const { Title, Paragraph } = Typography;
 export const ContentManagerHome: FC = () => {
   const { data: documentTypes, isLoading } = useDocumentTypes();
 
-  if (isLoading) {
+  if (isLoading && !documentTypes) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
         <Spin size="large" tip="Discovering content schemas..." />
@@ -57,3 +57,4 @@ export const ContentManagerHome: FC = () => {
     </Typography>
   );
 };
+export default ContentManagerHome;

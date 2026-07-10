@@ -10,16 +10,16 @@ import {
   SunOutlined,
   MoonOutlined,
 } from '@ant-design/icons';
-import { useDocumentTypes } from '@/api';
 import { useUIStore } from '@/store';
+import { useDocumentTypes } from '@/api';
 
 const { Header, Sider, Content } = Layout;
 
 export const DashboardLayout: FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { data: documentTypes, isLoading } = useDocumentTypes();
   const { themeMode, toggleThemeMode } = useUIStore();
+  const { data: documentTypes, isLoading } = useDocumentTypes();
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -38,9 +38,15 @@ export const DashboardLayout: FC = () => {
         : [],
     },
     {
-      key: '/schemas',
+      key: 'schema-inspector',
       icon: <AppstoreOutlined />,
-      label: <Link to="/schemas">Schema Inspector</Link>,
+      label: 'Schema Inspector',
+      children: documentTypes
+        ? documentTypes.map((type) => ({
+            key: `/schemas/${type.id}`,
+            label: <Link to={`/schemas/${type.id}`}>{type.title}</Link>,
+          }))
+        : [],
     },
     {
       key: '/settings',
@@ -92,7 +98,7 @@ export const DashboardLayout: FC = () => {
             theme={themeMode}
             mode="inline"
             selectedKeys={[location.pathname]}
-            defaultOpenKeys={['content-manager']}
+            defaultOpenKeys={['content-manager', 'schema-inspector']}
             items={menuItems}
             style={{ background: themeMode === 'dark' ? '#1e293b' : '#ffffff', borderRight: 0 }}
           />

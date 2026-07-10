@@ -1,13 +1,15 @@
 import { FC } from 'react';
-import { Typography, Table, Tag, Card, Space, Row, Col, Spin } from 'antd';
+import { useParams } from 'react-router-dom';
+import { Typography, Table, Tag, Card, Space, Row, Col, Spin, Empty } from 'antd';
 import { useDocumentTypes, useDetailedDocumentType, Attribute, FieldConstraint } from '@/api';
 
 const { Title, Paragraph, Text } = Typography;
 
 export const SchemaInspector: FC = () => {
+  const { apiId } = useParams<{ apiId?: string }>();
   const { data: documentTypes, isLoading } = useDocumentTypes();
 
-  if (isLoading) {
+  if (isLoading && !documentTypes) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
         <Spin size="large" tip="Loading schemas list..." />
@@ -15,15 +17,26 @@ export const SchemaInspector: FC = () => {
     );
   }
 
+  // Filter schemas to display depending on route param
+  const schemasToRender = apiId
+    ? documentTypes?.filter((t) => t.id === apiId)
+    : documentTypes;
+
+  if (apiId && (!schemasToRender || schemasToRender.length === 0)) {
+    return <Empty description={`Schema for '${apiId}' not found.`} />;
+  }
+
   return (
     <Typography style={{ width: '100%' }}>
-      <Title level={2}>Schema Inspector</Title>
+      <Title level={2}>{apiId ? `${apiId.toUpperCase()} Schema` : 'Schema Inspector'}</Title>
       <Paragraph style={{ marginBottom: 24 }}>
-        Discovered content models active in the CMS backend. Select a schema below to inspect its detailed specifications.
+        {apiId
+          ? `Detailed specifications for the ${apiId} document type configuration.`
+          : 'Discovered content models active in the CMS backend. Select a schema from the sidebar or inspect them below.'}
       </Paragraph>
 
       <Row gutter={[16, 16]}>
-        {documentTypes?.map((type) => (
+        {schemasToRender?.map((type) => (
           <Col span={24} key={type.id}>
             <DetailedSchemaCard id={type.id} />
           </Col>
@@ -36,7 +49,7 @@ export const SchemaInspector: FC = () => {
 const DetailedSchemaCard: FC<{ id: string }> = ({ id }) => {
   const { data: schema, isLoading } = useDetailedDocumentType(id);
 
-  if (isLoading) {
+  if (isLoading && !schema) {
     return (
       <Card style={{ background: 'var(--antd-color-bg-container)', border: '1px solid var(--antd-color-border-secondary)' }}>
         <Spin size="small" /> Loading schema details...

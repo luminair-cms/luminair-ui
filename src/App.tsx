@@ -26,6 +26,10 @@ const router = createBrowserRouter([
         element: <SchemaInspector />,
       },
       {
+        path: 'schemas/:apiId',
+        element: <SchemaInspector />,
+      },
+      {
         path: 'settings',
         element: <Settings />,
       },

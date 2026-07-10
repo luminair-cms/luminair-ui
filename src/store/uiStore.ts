@@ -6,6 +6,7 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  themeMode: 'light', // Standard light theme default as requested
+  themeMode: 'light',
   toggleThemeMode: () => set((state) => ({ themeMode: state.themeMode === 'light' ? 'dark' : 'light' })),
 }));
+export default useUIStore;
