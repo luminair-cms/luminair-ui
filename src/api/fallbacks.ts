@@ -1,62 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { DocumentResponse, DetailedDocumentResponse, DocumentRecord } from './types';
 
-// --- API Schema Interfaces (Conforming to Backend DTOs) ---
-
-export interface DocumentResponse {
-  id: string;
-  title: string;
-  type: 'collection' | 'single';
-  description: string | null;
-}
-
-export interface DocumentInfo {
-  title: string;
-  description: string | null;
-  singularName: string;
-  pluralName: string;
-}
-
-export interface DocumentOptions {
-  draftAndPublish: boolean;
-  localizations: string[];
-}
-
-export interface FieldConstraint {
-  [key: string]: unknown;
-}
-
-export interface FieldAttribute {
-  type: string;
-  unique: boolean;
-  required: boolean;
-  constraints?: FieldConstraint[];
-}
-
-export interface RelationAttribute {
-  relation: string;
-  target: string;
-}
-
-export interface Attribute {
-  id: string;
-  type?: string;
-  unique?: boolean;
-  required?: boolean;
-  constraints?: FieldConstraint[];
-  relation?: string;
-  target?: string;
-}
-
-export interface DetailedDocumentResponse {
-  id: string;
-  title: string;
-  type: 'collection' | 'single';
-  info: DocumentInfo;
-  options: DocumentOptions | null;
-  attributes: Attribute[];
-}
-
-// --- Fallback Mock Data matching actual backend config/schema files ---
+// Fallback Mock Data matching actual backend config/schema files
 
 export const fallbackDocumentTypes: DocumentResponse[] = [
   {
@@ -172,59 +116,6 @@ export const fallbackDetailedDocumentTypes: Record<string, DetailedDocumentRespo
   },
 };
 
-// --- React Query Hooks with API Fetching and Defensive Fallbacks ---
-
-export const useDocumentTypes = () => {
-  return useQuery<DocumentResponse[]>({
-    queryKey: ['documentTypes'],
-    queryFn: async () => {
-      try {
-        const res = await fetch('/api/meta/documents');
-        if (!res.ok) {
-          throw new Error('API server returned error status');
-        }
-        const payload = await res.json();
-        return payload.data;
-      } catch (err) {
-        console.warn('API error fetching document types, falling back to local mock data:', err);
-        return fallbackDocumentTypes;
-      }
-    },
-  });
-};
-
-export const useDetailedDocumentType = (id: string | undefined) => {
-  return useQuery<DetailedDocumentResponse | null>({
-    queryKey: ['detailedDocumentType', id],
-    enabled: !!id,
-    queryFn: async () => {
-      if (!id) return null;
-      try {
-        const res = await fetch(`/api/meta/documents/${id}`);
-        if (!res.ok) {
-          throw new Error('API server returned error status');
-        }
-        const payload = await res.json();
-        return payload.data;
-      } catch (err) {
-        console.warn(`API error fetching detailed schema for ${id}, falling back to local mock data:`, err);
-        return fallbackDetailedDocumentTypes[id] || null;
-      }
-    },
-  });
-};
-
-export interface DocumentRecord {
-  id: number;
-  documentId: string;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string | null;
-  [key: string]: unknown;
-}
-
-// --- Mock documents of different types ---
-
 export const fallbackDocuments: Record<string, DocumentRecord[]> = {
   brands: [
     {
@@ -285,7 +176,7 @@ export const fallbackDocuments: Record<string, DocumentRecord[]> = {
       legal_entity: 'Moldtelecom SA',
       createdAt: '2024-03-06T13:43:30.172Z',
       updatedAt: '2024-03-06T13:43:30.172Z',
-      publishedAt: null, // Draft
+      publishedAt: null,
     },
   ],
   'points-of-sale': [
@@ -301,25 +192,4 @@ export const fallbackDocuments: Record<string, DocumentRecord[]> = {
       publishedAt: '2024-03-06T13:42:05.103Z',
     },
   ],
-};
-
-export const useDocuments = (apiId: string | undefined) => {
-  return useQuery<DocumentRecord[]>({
-    queryKey: ['documents', apiId],
-    enabled: !!apiId,
-    queryFn: async () => {
-      if (!apiId) return [];
-      try {
-        const res = await fetch(`/api/documents/${apiId}`);
-        if (!res.ok) {
-          throw new Error('API server returned error status');
-        }
-        const payload = await res.json();
-        return payload.data;
-      } catch (err) {
-        console.warn(`API error fetching documents for ${apiId}, falling back to local mock data:`, err);
-        return fallbackDocuments[apiId] || [];
-      }
-    },
-  });
 };

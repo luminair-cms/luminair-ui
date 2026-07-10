@@ -7,8 +7,11 @@ import {
   DatabaseOutlined,
   SettingOutlined,
   AppstoreOutlined,
+  SunOutlined,
+  MoonOutlined,
 } from '@ant-design/icons';
 import { useDocumentTypes } from '@/api';
+import { useUIStore } from '@/store';
 
 const { Header, Sider, Content } = Layout;
 
@@ -16,6 +19,7 @@ export const DashboardLayout: FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { data: documentTypes, isLoading } = useDocumentTypes();
+  const { themeMode, toggleThemeMode } = useUIStore();
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -47,35 +51,65 @@ export const DashboardLayout: FC = () => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider trigger={null} collapsible collapsed={collapsed} theme="dark" style={{ background: '#1e293b' }}>
-        <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', padding: '0 8px' }}>
+      <Sider
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        theme={themeMode}
+        style={{ background: themeMode === 'dark' ? '#1e293b' : '#ffffff' }}
+      >
+        <div
+          style={{
+            height: 64,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: themeMode === 'dark' ? '#0f172a' : '#f1f5f9',
+            padding: '0 8px',
+            transition: 'background 0.2s',
+          }}
+        >
           <Space>
             <img
               src="https://avatars.githubusercontent.com/u/215728507?s=64&v=4"
               alt="Luminair CMS Logo"
               style={{ width: 32, height: 32, borderRadius: 6, display: 'block' }}
             />
-            {!collapsed && <span style={{ fontWeight: 'bold', fontSize: 16, color: '#f8fafc' }}>Luminair</span>}
+            {!collapsed && (
+              <span style={{ fontWeight: 'bold', fontSize: 16, color: themeMode === 'dark' ? '#f8fafc' : '#0f172a' }}>
+                Luminair
+              </span>
+            )}
           </Space>
         </div>
-        
+
         {isLoading && !documentTypes ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
             <Spin size="small" />
           </div>
         ) : (
           <Menu
-            theme="dark"
+            theme={themeMode}
             mode="inline"
             selectedKeys={[location.pathname]}
             defaultOpenKeys={['content-manager']}
             items={menuItems}
-            style={{ background: '#1e293b' }}
+            style={{ background: themeMode === 'dark' ? '#1e293b' : '#ffffff', borderRight: 0 }}
           />
         )}
       </Sider>
       <Layout>
-        <Header style={{ padding: '0 16px', background: colorBgContainer, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+        <Header
+          style={{
+            padding: '0 16px',
+            background: colorBgContainer,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            height: 64,
+            transition: 'background 0.2s',
+          }}
+        >
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -83,6 +117,12 @@ export const DashboardLayout: FC = () => {
             style={{ fontSize: '16px', width: 64, height: 64 }}
           />
           <Space size="large">
+            <Button
+              type="text"
+              icon={themeMode === 'dark' ? <SunOutlined style={{ color: '#f59e0b' }} /> : <MoonOutlined />}
+              onClick={toggleThemeMode}
+              style={{ fontSize: 16 }}
+            />
             <span style={{ color: '#64748b' }}>v0.1.0</span>
           </Space>
         </Header>
@@ -94,6 +134,7 @@ export const DashboardLayout: FC = () => {
             borderRadius: borderRadiusLG,
             minHeight: 280,
             overflow: 'auto',
+            transition: 'background 0.2s',
           }}
         >
           <Outlet />
@@ -102,3 +143,4 @@ export const DashboardLayout: FC = () => {
     </Layout>
   );
 };
+export default DashboardLayout;
