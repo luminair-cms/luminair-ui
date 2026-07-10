@@ -115,10 +115,19 @@ luminair-ui/
 
 ---
 
+## Routing & Project Layout Documentation
+
+For architecture decisions and guidelines, refer to:
+* **[React Router Modes](../documentation/routing-modes.md)**: Analysis of Hash, Browser, and Memory routers and why we choose Browser Router.
+* **[React Project Layout Best Practices](../documentation/project-layout-best-practices.md)**: Detailed structure guidelines for components, features, pages, services, stores, and dependency flow.
+
+---
+
 ## Getting Started
 
-To run the developer server locally during implementation:
+To run the developer server locally:
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
+
