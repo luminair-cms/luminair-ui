@@ -12,6 +12,7 @@ import {
 } from '@ant-design/icons';
 import { useUIStore } from '@/store';
 import { useDocumentTypes } from '@/api';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const { Header, Sider, Content } = Layout;
 
@@ -143,7 +144,9 @@ export const DashboardLayout: FC = () => {
             transition: 'background 0.2s',
           }}
         >
-          <Outlet />
+          <ErrorBoundary type="content">
+            <Outlet />
+          </ErrorBoundary>
         </Content>
       </Layout>
     </Layout>

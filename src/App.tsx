@@ -1,11 +1,23 @@
-import { FC, useEffect } from 'react';
+import { FC, lazy, Suspense, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, Spin } from 'antd';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getThemeConfig } from '@/themeConfig';
 import { DashboardLayout } from '@/DashboardLayout';
 import { useUIStore } from '@/store';
-import { ContentManagerHome, DocumentListView, SchemaInspector, Settings } from '@/pages';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+// Route-level lazy loading — each page is a separate async chunk
+const ContentManagerHome = lazy(() => import('@/pages/ContentManagerHome'));
+const DocumentListView = lazy(() => import('@/pages/DocumentListView'));
+const SchemaInspector = lazy(() => import('@/pages/SchemaInspector'));
+const Settings = lazy(() => import('@/pages/Settings'));
+
+const routeFallback = (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+    <Spin size="large" />
+  </div>
+);
 
 // Router configuration
 const router = createBrowserRouter([
@@ -15,23 +27,23 @@ const router = createBrowserRouter([
     children: [
       {
         path: '',
-        element: <ContentManagerHome />,
+        element: <Suspense fallback={routeFallback}><ContentManagerHome /></Suspense>,
       },
       {
         path: 'documents/:apiId',
-        element: <DocumentListView />,
+        element: <Suspense fallback={routeFallback}><DocumentListView /></Suspense>,
       },
       {
         path: 'schemas',
-        element: <SchemaInspector />,
+        element: <Suspense fallback={routeFallback}><SchemaInspector /></Suspense>,
       },
       {
         path: 'schemas/:apiId',
-        element: <SchemaInspector />,
+        element: <Suspense fallback={routeFallback}><SchemaInspector /></Suspense>,
       },
       {
         path: 'settings',
-        element: <Settings />,
+        element: <Suspense fallback={routeFallback}><Settings /></Suspense>,
       },
     ],
   },
@@ -57,7 +69,9 @@ export const App: FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ConfigProvider theme={getThemeConfig(themeMode)}>
-        <RouterProvider router={router} />
+        <ErrorBoundary type="global">
+          <RouterProvider router={router} />
+        </ErrorBoundary>
       </ConfigProvider>
     </QueryClientProvider>
   );
