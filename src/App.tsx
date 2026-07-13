@@ -12,6 +12,7 @@ const ContentManagerHome = lazy(() => import('@/pages/ContentManagerHome'));
 const DocumentListView = lazy(() => import('@/pages/DocumentListView'));
 const SchemaInspector = lazy(() => import('@/pages/SchemaInspector'));
 const Settings = lazy(() => import('@/pages/Settings'));
+const DocumentEditView = lazy(() => import('@/pages/DocumentEditView'));
 
 const routeFallback = (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
       {
         path: 'documents/:apiId',
         element: <Suspense fallback={routeFallback}><DocumentListView /></Suspense>,
+      },
+      {
+        path: 'documents/:apiId/:documentId',
+        element: <Suspense fallback={routeFallback}><DocumentEditView /></Suspense>,
       },
       {
         path: 'schemas',

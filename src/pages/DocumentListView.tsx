@@ -1,17 +1,50 @@
-import { FC, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Typography, Button, Table, Tag, Card, Space, Spin, Empty, Badge } from 'antd';
-import { useDetailedDocumentType, useDocuments, DocumentRecord, isRelationAttribute } from '@/api';
-import { CreateDocumentDrawer } from '@/components';
+import { FC } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Typography, Button, Table, Tag, Card, Space, Spin, Empty, Badge, message } from 'antd';
+import {
+  useDetailedDocumentType,
+  useDocuments,
+  usePublishDocument,
+  DocumentRecord,
+  isRelationAttribute,
+} from '@/api';
 import { PlusOutlined } from '@ant-design/icons';
 
 const { Title, Paragraph, Text } = Typography;
 
+// Inline subcomponent to handle hook invocation per row safely
+const PublishButton: FC<{ apiId: string; documentId: string }> = ({ apiId, documentId }) => {
+  const publishMutation = usePublishDocument(apiId, documentId);
+
+  const handlePublish = () => {
+    publishMutation.mutate(undefined, {
+      onSuccess: () => {
+        message.success('Document published successfully!');
+      },
+      onError: (err) => {
+        message.error(`Publish failed: ${err.detail || err.title || 'Unknown error'}`);
+      },
+    });
+  };
+
+  return (
+    <Button
+      size="small"
+      type="primary"
+      loading={publishMutation.isPending}
+      onClick={handlePublish}
+      style={{ background: '#10b981', borderColor: '#10b981' }}
+    >
+      Publish
+    </Button>
+  );
+};
+
 export const DocumentListView: FC = () => {
   const { apiId } = useParams<{ apiId: string }>();
+  const navigate = useNavigate();
   const { data: schema, isLoading: schemaLoading } = useDetailedDocumentType(apiId);
   const { data: documents, isLoading: docsLoading } = useDocuments(apiId);
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   if (schemaLoading || docsLoading) {
     return (
@@ -21,7 +54,7 @@ export const DocumentListView: FC = () => {
     );
   }
 
-  if (!schema) {
+  if (!schema || !apiId) {
     return <Empty description={`Content type '${apiId}' schema not found.`} />;
   }
 
@@ -40,11 +73,11 @@ export const DocumentListView: FC = () => {
         </Space>
       );
     }
-    return String(val);
+    return <Text>{String(val)}</Text>;
   };
 
   // Build columns dynamically based on schema attributes
-  const dynamicColumns = [
+  const dynamicColumns: any[] = [
     {
       title: 'Document ID',
       dataIndex: 'documentId',
@@ -78,31 +111,42 @@ export const DocumentListView: FC = () => {
   // Add standard timestamp / publication columns
   dynamicColumns.push({
     title: 'Status',
-    dataIndex: 'publishedAt',
+    dataIndex: 'status',
     key: 'status',
     width: 120,
-    render: (publishedAt: string | null) => (
-      <Badge
-        status={publishedAt ? 'success' : 'warning'}
-        text={<span>{publishedAt ? 'Published' : 'Draft'}</span>}
-      />
-    ),
+    render: (status: string | undefined, record: DocumentRecord) => {
+      const docStatus = status || (record.publishedAt ? 'published' : 'draft');
+      const normalized = String(docStatus).toLowerCase();
+
+      if (normalized === 'published') {
+        return <Badge status="success" text="Published" />;
+      }
+      if (normalized === 'modified') {
+        return <Badge status="processing" text="Modified" />;
+      }
+      return <Badge status="warning" text="Draft" />;
+    },
   });
 
   dynamicColumns.push({
     title: 'Actions',
     key: 'actions',
     width: 160,
-    render: (_text: unknown, record: DocumentRecord) => (
-      <Space>
-        <Button size="small">Edit</Button>
-        {!record.publishedAt && (
-          <Button size="small" type="primary" style={{ background: '#10b981', borderColor: '#10b981' }}>
-            Publish
+    render: (_text: unknown, record: DocumentRecord) => {
+      const docStatus = record.status || (record.publishedAt ? 'published' : 'draft');
+      const showPublish = schema.options?.draftAndPublish && docStatus !== 'published';
+
+      return (
+        <Space>
+          <Button size="small" onClick={() => navigate(`/documents/${apiId}/${record.documentId}`)}>
+            Edit
           </Button>
-        )}
-      </Space>
-    ),
+          {showPublish && (
+            <PublishButton apiId={apiId} documentId={record.documentId} />
+          )}
+        </Space>
+      );
+    },
   });
 
   return (
@@ -112,7 +156,7 @@ export const DocumentListView: FC = () => {
           <Title level={2}>{schema.title}</Title>
           <Paragraph type="secondary">{schema.info.description || 'Manage dynamic database entries.'}</Paragraph>
         </Typography>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setDrawerOpen(true)}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(`/documents/${apiId}/new`)}>
           Create New {schema.info.singularName}
         </Button>
       </div>
@@ -128,15 +172,6 @@ export const DocumentListView: FC = () => {
           style={{ background: 'transparent' }}
         />
       </Card>
-
-      {schema && apiId && (
-        <CreateDocumentDrawer
-          open={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-          schema={schema}
-          apiId={apiId}
-        />
-      )}
     </div>
   );
 };

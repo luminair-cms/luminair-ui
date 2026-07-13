@@ -56,6 +56,7 @@ export interface DetailedDocumentResponse {
 export interface DocumentRecord {
   id: number;
   documentId: string;
+  status?: 'draft' | 'modified' | 'published';
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
