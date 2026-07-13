@@ -1,7 +1,8 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Typography, Button, Table, Tag, Card, Space, Spin, Empty, Badge } from 'antd';
 import { useDetailedDocumentType, useDocuments, DocumentRecord, isRelationAttribute } from '@/api';
+import { CreateDocumentDrawer } from '@/components';
 import { PlusOutlined } from '@ant-design/icons';
 
 const { Title, Paragraph, Text } = Typography;
@@ -10,6 +11,7 @@ export const DocumentListView: FC = () => {
   const { apiId } = useParams<{ apiId: string }>();
   const { data: schema, isLoading: schemaLoading } = useDetailedDocumentType(apiId);
   const { data: documents, isLoading: docsLoading } = useDocuments(apiId);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   if (schemaLoading || docsLoading) {
     return (
@@ -110,7 +112,7 @@ export const DocumentListView: FC = () => {
           <Title level={2}>{schema.title}</Title>
           <Paragraph type="secondary">{schema.info.description || 'Manage dynamic database entries.'}</Paragraph>
         </Typography>
-        <Button type="primary" icon={<PlusOutlined />}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setDrawerOpen(true)}>
           Create New {schema.info.singularName}
         </Button>
       </div>
@@ -126,6 +128,15 @@ export const DocumentListView: FC = () => {
           style={{ background: 'transparent' }}
         />
       </Card>
+
+      {schema && apiId && (
+        <CreateDocumentDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          schema={schema}
+          apiId={apiId}
+        />
+      )}
     </div>
   );
 };

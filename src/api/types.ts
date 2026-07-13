@@ -61,3 +61,17 @@ export interface DocumentRecord {
   publishedAt: string | null;
   [key: string]: unknown;
 }
+
+/** Payload envelope for POST /api/documents/:apiId */
+export interface CreateDocumentPayload {
+  data: Record<string, unknown>;
+}
+
+/** RFC 7807 / RFC 9457 Problem Details — shape returned by the backend on error */
+export interface ProblemDetails {
+  type: string;
+  title: string;
+  status: number;
+  detail: string;
+  instance?: string;
+}
