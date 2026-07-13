@@ -25,7 +25,8 @@ export interface FieldConstraint {
 
 export interface FieldAttribute {
   id: string;
-  type: string;
+  /** Backend may return a plain string ("text") or a tagged object ({"decimal":{"precision":10,"scale":8}}) */
+  type: string | Record<string, unknown>;
   unique: boolean;
   required: boolean;
   constraints?: FieldConstraint[];

@@ -1,9 +1,51 @@
 import { FC } from 'react';
 import { useParams } from 'react-router-dom';
 import { Typography, Table, Tag, Card, Space, Row, Col, Spin, Empty } from 'antd';
-import { useDocumentTypes, useDetailedDocumentType, Attribute, FieldConstraint, isRelationAttribute } from '@/api';
+import { useDocumentTypes, useDetailedDocumentType, Attribute, FieldConstraint, FieldAttribute, isRelationAttribute } from '@/api';
 
 const { Title, Paragraph, Text } = Typography;
+
+/**
+ * Converts a backend `type` value to a human-readable label.
+ * The backend may return:
+ *   - a plain string:                  "text" | "uid" | "localizedText" | …
+ *   - a scalar variant object:         { "integer": "int32" }
+ *   - a parameterised variant object:  { "decimal": { "precision": 10, "scale": 8 } }
+ */
+const renderAttributeType = (type: FieldAttribute['type']) => {
+  if (typeof type === 'string') {
+    return <Tag color="blue">{type}</Tag>;
+  }
+
+  // Tagged-union object — exactly one key is the type name
+  const entries = Object.entries(type);
+  if (entries.length === 0) {
+    return <Tag color="blue">unknown</Tag>;
+  }
+
+  const [typeName, params] = entries[0];
+
+  if (params !== null && typeof params === 'object') {
+    // Parameterised: { decimal: { precision: 10, scale: 8 } }
+    const detail = Object.entries(params as Record<string, unknown>)
+      .map(([k, v]) => `${k}:${v}`)
+      .join(', ');
+    return (
+      <Space size={4}>
+        <Tag color="blue">{typeName}</Tag>
+        <Tag color="geekblue" style={{ fontSize: 11 }}>{detail}</Tag>
+      </Space>
+    );
+  }
+
+  // Scalar variant: { integer: "int32" }
+  return (
+    <Space size={4}>
+      <Tag color="blue">{typeName}</Tag>
+      <Tag color="geekblue" style={{ fontSize: 11 }}>{String(params)}</Tag>
+    </Space>
+  );
+};
 
 export const SchemaInspector: FC = () => {
   const { apiId } = useParams<{ apiId?: string }>();
@@ -80,20 +122,23 @@ const DetailedSchemaCard: FC<{ id: string }> = ({ id }) => {
             </Space>
           );
         }
-        return <Tag color="blue">{record.type}</Tag>;
+        return renderAttributeType((record as FieldAttribute).type);
       },
     },
     {
       title: 'Unique',
       dataIndex: 'unique',
       key: 'unique',
-      render: (unique: boolean) => (unique ? <Tag color="purple">Yes</Tag> : <Tag color="default">No</Tag>),
+      // Relation attributes don't carry unique/required — guard against undefined/null
+      render: (unique: unknown) =>
+        unique === true ? <Tag color="purple">Yes</Tag> : <Tag color="default">No</Tag>,
     },
     {
       title: 'Required',
       dataIndex: 'required',
       key: 'required',
-      render: (required: boolean) => (required ? <Tag color="red">Yes</Tag> : <Tag color="default">No</Tag>),
+      render: (required: unknown) =>
+        required === true ? <Tag color="red">Yes</Tag> : <Tag color="default">No</Tag>,
     },
     {
       title: 'Constraints',
@@ -105,7 +150,16 @@ const DetailedSchemaCard: FC<{ id: string }> = ({ id }) => {
           <Space size={[4, 4]} wrap>
             {constraints.map((c, i) => (
               <Tag key={i} color="orange" style={{ fontSize: 11 }}>
-                {Object.entries(c).map(([k, v]) => `${k}: ${v}`).join(', ')}
+                {Object.entries(c)
+                  .map(([k, v]) => {
+                    // Constraint values may be nested objects (e.g. { decimal: { precision, scale } })
+                    const display =
+                      v !== null && typeof v === 'object'
+                        ? JSON.stringify(v)
+                        : String(v);
+                    return `${k}: ${display}`;
+                  })
+                  .join(', ')}
               </Tag>
             ))}
           </Space>
