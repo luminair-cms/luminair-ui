@@ -14,8 +14,11 @@ export const useDocumentTypes = () => {
       try {
         return await apiClient<DocumentResponse[]>('/api/meta/documents');
       } catch (err) {
-        console.warn('API error fetching document types, falling back to local mock data:', err);
-        return fallbackDocumentTypes;
+        if (import.meta.env.MODE === 'test') {
+          console.warn('API error fetching document types, falling back to local mock data:', err);
+          return fallbackDocumentTypes;
+        }
+        throw err;
       }
     },
   });
@@ -30,8 +33,11 @@ export const useDetailedDocumentType = (id: string | undefined) => {
       try {
         return await apiClient<DetailedDocumentResponse>(`/api/meta/documents/${id}`);
       } catch (err) {
-        console.warn(`API error fetching detailed schema for ${id}, falling back to local mock data:`, err);
-        return fallbackDetailedDocumentTypes[id] || null;
+        if (import.meta.env.MODE === 'test') {
+          console.warn(`API error fetching detailed schema for ${id}, falling back to local mock data:`, err);
+          return fallbackDetailedDocumentTypes[id] || null;
+        }
+        throw err;
       }
     },
   });
@@ -46,8 +52,11 @@ export const useDocuments = (apiId: string | undefined) => {
       try {
         return await apiClient<DocumentRecord[]>(`/api/documents/${apiId}`);
       } catch (err) {
-        console.warn(`API error fetching documents for ${apiId}, falling back to local mock data:`, err);
-        return fallbackDocuments[apiId] || [];
+        if (import.meta.env.MODE === 'test') {
+          console.warn(`API error fetching documents for ${apiId}, falling back to local mock data:`, err);
+          return fallbackDocuments[apiId] || [];
+        }
+        throw err;
       }
     },
   });
@@ -103,9 +112,12 @@ export const useDocument = (apiId: string | undefined, documentId: string | unde
       try {
         return await apiClient<DocumentRecord>(`/api/documents/${apiId}/${documentId}?status=draft`);
       } catch (err) {
-        console.warn(`API error fetching document ${documentId} for ${apiId}, falling back to local mock data:`, err);
-        const docs = fallbackDocuments[apiId] || [];
-        return docs.find(d => d.documentId === documentId) || null;
+        if (import.meta.env.MODE === 'test') {
+          console.warn(`API error fetching document ${documentId} for ${apiId}, falling back to local mock data:`, err);
+          const docs = fallbackDocuments[apiId] || [];
+          return docs.find(d => d.documentId === documentId) || null;
+        }
+        throw err;
       }
     },
   });
