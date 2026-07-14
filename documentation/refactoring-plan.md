@@ -12,7 +12,13 @@ A detailed, step-by-step plan to resolve every issue identified in `codebase-ana
 
 **Estimated effort**: Small — confined to `src/api/`.
 
-### Step 1.1 — Extend `apiClient` for mutations
+### Step 1.1 — Extend `apiClient` for mutations ✅ **DONE**
+
+> **Implemented**: `apiMutate` was added to `src/api/client.ts` on 2026-07-14.
+> The implementation follows the spec below with one minor refinement: the
+> envelope-unwrap guard uses an explicit `'data' in payload` check (instead of
+> `data?.data ?? data`) to satisfy TypeScript strict-mode and avoid the
+> `TResponse` widening that `??` would require.
 
 **File**: `src/api/client.ts`
 
@@ -107,7 +113,8 @@ Update existing test files to call `mockApiClient()` in a `beforeEach` block.
 
 ### Verification
 
-- [ ] `pnpm build` succeeds — no import errors.
+- [x] `pnpm exec tsc --noEmit` passes — zero type errors after Step 1.1.
+- [ ] `pnpm build` succeeds — blocked by pre-existing `dayjs` resolution error in `helpers.ts` (addressed in Step 4.3); not introduced by this change.
 - [ ] `pnpm test` passes — tests still work with the new mock approach.
 - [ ] `pnpm lint` clean.
 - [ ] Manually confirm dev server can fetch from the backend proxy (no regressions).

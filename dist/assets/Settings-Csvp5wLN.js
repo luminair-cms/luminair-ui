@@ -1,0 +1,1 @@
+import{t as e}from"./react-vendor-CXiKuL0k.js";import{t}from"./antd-vendor-Br82oGau.js";var n=e(),{Title:r,Paragraph:i}=t,a=()=>(0,n.jsxs)(t,{children:[(0,n.jsx)(r,{level:2,children:`Settings`}),(0,n.jsx)(i,{children:`Global system configuration, localized languages registry, and SSO authentication endpoints management.`})]});export{a as Settings,a as default};
