@@ -57,8 +57,12 @@ export const SchemaCard: FC<SchemaCardProps> = ({ id }) => {
       title: 'Unique',
       dataIndex: 'unique',
       key: 'unique',
-      render: (unique: unknown) =>
-        unique === true ? <Tag color="purple">Yes</Tag> : <Tag color="default">No</Tag>,
+      render: (unique: unknown, record: Attribute) => {
+        if (isRelationAttribute(record)) {
+          return <Text type="secondary">—</Text>;
+        }
+        return unique === true ? <Tag color="purple">Yes</Tag> : <Tag color="default">No</Tag>;
+      },
     },
     {
       title: 'Required',

@@ -73,6 +73,9 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
 
       for (const attr of schema.attributes) {
         if (isRelationAttribute(attr)) {
+          const isOwning = attr.relation === 'hasOne' || attr.relation === 'hasMany';
+          if (!isOwning) continue;
+
           const val = values[attr.id];
           if (val !== undefined && val !== null) {
             const ids = Array.isArray(val) ? val : [val];
