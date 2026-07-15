@@ -68,7 +68,7 @@ export function mockApiClient() {
         const docs = fallbackDocuments[apiId] ?? [];
         return Promise.resolve(docs.find((d) => d.documentId === documentId) ?? null);
       }
-      const listMatch = path.match(/^\/api\/documents\/([^/]+)$/);
+      const listMatch = path.match(/^\/api\/documents\/([^/?]+)(?:\?.*)?$/);
       if (listMatch) {
         return Promise.resolve(fallbackDocuments[listMatch[1]] ?? []);
       }

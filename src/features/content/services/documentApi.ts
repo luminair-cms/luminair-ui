@@ -8,7 +8,7 @@ import { DocumentRecord, CreateDocumentPayload } from '../types';
 export const documentApi = {
   /** Fetch list of documents for a given content type */
   fetchDocuments: (apiId: string): Promise<DocumentRecord[]> =>
-    apiQuery<DocumentRecord[]>(`/api/documents/${apiId}`),
+    apiQuery<DocumentRecord[]>(`/api/documents/${apiId}?status=draft`),
 
   /** Fetch a single document instance by ID (draft status) */
   fetchDocument: (apiId: string, documentId: string): Promise<DocumentRecord> =>
