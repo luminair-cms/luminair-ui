@@ -1,4 +1,3 @@
-
 export interface DocumentRecord {
   id: number;
   documentId: string;

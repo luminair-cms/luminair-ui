@@ -83,7 +83,10 @@ export class ErrorBoundary extends Component<Props, State> {
           children: (
             <div style={{ textAlign: 'left' }}>
               <Paragraph>
-                <Text strong type="danger">Message:</Text> <Text code>{errorMsg}</Text>
+                <Text strong type="danger">
+                  Message:
+                </Text>{' '}
+                <Text code>{errorMsg}</Text>
               </Paragraph>
               {componentStack && (
                 <div>
@@ -116,7 +119,11 @@ export class ErrorBoundary extends Component<Props, State> {
           <Result
             status="error"
             title={isGlobal ? 'Something went wrong globally' : 'Component Render Failed'}
-            subTitle={isGlobal ? 'Luminair encountered a critical error and could not render the application layout.' : 'An error occurred while loading this section of the page.'}
+            subTitle={
+              isGlobal
+                ? 'Luminair encountered a critical error and could not render the application layout.'
+                : 'An error occurred while loading this section of the page.'
+            }
             extra={
               <Space size="middle">
                 <Button type="primary" icon={<ReloadOutlined />} onClick={this.handleReset}>

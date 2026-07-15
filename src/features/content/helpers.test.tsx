@@ -53,8 +53,14 @@ describe('content helpers', () => {
     }
 
     it('maps minimalLength and maximalLength correctly', () => {
-      expect(constraintToRule({ minimalLength: 5 })).toEqual({ min: 5, message: 'Minimum 5 characters required' });
-      expect(constraintToRule({ maximalLength: 10 })).toEqual({ max: 10, message: 'Maximum 10 characters allowed' });
+      expect(constraintToRule({ minimalLength: 5 })).toEqual({
+        min: 5,
+        message: 'Minimum 5 characters required',
+      });
+      expect(constraintToRule({ maximalLength: 10 })).toEqual({
+        max: 10,
+        message: 'Maximum 10 characters allowed',
+      });
     });
 
     it('maps minimalIntegerValue validator constraint', async () => {

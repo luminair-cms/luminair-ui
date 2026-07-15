@@ -32,5 +32,4 @@ export const useDocument = (apiId: string | undefined, documentId: string | unde
  * Fetches documents for a related collection to populate relation Select inputs.
  * Reuses the same query key and hook as useDocuments.
  */
-export const useDocumentSearch = (targetApiId: string | undefined) =>
-  useDocuments(targetApiId);
+export const useDocumentSearch = (targetApiId: string | undefined) => useDocuments(targetApiId);

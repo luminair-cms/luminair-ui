@@ -1,1 +1,0 @@
-var e=e=>`relation`in e;export{e as t};

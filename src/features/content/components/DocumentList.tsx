@@ -34,9 +34,15 @@ export const DocumentList: FC<DocumentListProps> = ({ apiId }) => {
       <div className="page-header">
         <Typography>
           <Title level={2}>{schema.title}</Title>
-          <Paragraph type="secondary">{schema.info.description || 'Manage dynamic database entries.'}</Paragraph>
+          <Paragraph type="secondary">
+            {schema.info.description || 'Manage dynamic database entries.'}
+          </Paragraph>
         </Typography>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(`/documents/${apiId}/new`)}>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => navigate(`/documents/${apiId}/new`)}
+        >
           Create New {schema.info.singularName}
         </Button>
       </div>

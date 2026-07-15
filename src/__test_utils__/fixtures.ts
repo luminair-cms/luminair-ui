@@ -47,7 +47,13 @@ export const fallbackDetailedDocumentTypes: Record<string, DetailedDocumentRespo
       localizations: ['en', 'ro'],
     },
     attributes: [
-      { id: 'uid', type: 'uid', unique: true, required: true, constraints: [{ minimalLength: 4 }, { maximalLength: 10 }] },
+      {
+        id: 'uid',
+        type: 'uid',
+        unique: true,
+        required: true,
+        constraints: [{ minimalLength: 4 }, { maximalLength: 10 }],
+      },
       { id: 'name', type: 'text', unique: false, required: true, constraints: [] },
       { id: 'partners', relation: 'belongsToMany', target: 'partners' },
     ],
@@ -87,7 +93,13 @@ export const fallbackDetailedDocumentTypes: Record<string, DetailedDocumentRespo
       localizations: [],
     },
     attributes: [
-      { id: 'idno', type: 'text', unique: true, required: true, constraints: [{ pattern: '^[0-9]{13}$' }] },
+      {
+        id: 'idno',
+        type: 'text',
+        unique: true,
+        required: true,
+        constraints: [{ pattern: '^[0-9]{13}$' }],
+      },
       { id: 'legal_entity', type: 'text', unique: true, required: true },
       { id: 'brands', relation: 'hasMany', target: 'brands' },
       { id: 'category', relation: 'hasOne', target: 'partner-categories' },

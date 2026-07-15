@@ -53,11 +53,9 @@ describe('API Client', () => {
       });
       vi.stubGlobal('fetch', mockFetch);
 
-      const result = await apiMutate<{ success: boolean }, { name: string }>(
-        '/test',
-        'POST',
-        { name: 'New Brand' },
-      );
+      const result = await apiMutate<{ success: boolean }, { name: string }>('/test', 'POST', {
+        name: 'New Brand',
+      });
 
       expect(result.data).toEqual({ success: true });
       expect(result.headers.get('Location')).toBe('/api/documents/brands/1');

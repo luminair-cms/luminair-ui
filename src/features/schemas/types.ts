@@ -1,4 +1,3 @@
-
 export interface DocumentInfo {
   title: string;
   description: string | null;

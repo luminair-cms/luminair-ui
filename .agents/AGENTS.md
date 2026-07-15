@@ -69,3 +69,11 @@ We follow a modular layout designed to scale. Refer to [Project Layout Best Prac
 * All project additions must utilize **pnpm** package management.
 * Dependencies inside `package.json` must be sorted alphabetically.
 * Shared version patterns must align with backend conventions (e.g., React `19.x`, TS `7.0.x`, Vite `8.x`).
+
+---
+
+## Export Conventions
+* **Named exports** are the default for all modules (per best practices).
+* **Page components** additionally use a `default export` because `React.lazy()` requires it.
+  Both the named and default export reference the same component declaration.
+

@@ -90,9 +90,7 @@ export const DashboardLayout: FC = () => {
               style={{ width: 32, height: 32, borderRadius: 6, display: 'block' }}
             />
             {!collapsed && (
-              <span style={{ fontWeight: 'bold', fontSize: 16, color: colorText }}>
-                Luminair
-              </span>
+              <span style={{ fontWeight: 'bold', fontSize: 16, color: colorText }}>Luminair</span>
             )}
           </Space>
         </div>
@@ -133,7 +131,13 @@ export const DashboardLayout: FC = () => {
           <Space size="large">
             <Button
               type="text"
-              icon={themeMode === 'dark' ? <SunOutlined style={{ color: colorWarning }} /> : <MoonOutlined />}
+              icon={
+                themeMode === 'dark' ? (
+                  <SunOutlined style={{ color: colorWarning }} />
+                ) : (
+                  <MoonOutlined />
+                )
+              }
               onClick={toggleThemeMode}
               style={{ fontSize: 16 }}
             />

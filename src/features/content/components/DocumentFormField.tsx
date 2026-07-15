@@ -1,22 +1,8 @@
 import { FC } from 'react';
-import {
-  Form,
-  Input,
-  InputNumber,
-  Switch,
-  DatePicker,
-  Tabs,
-  Space,
-  Tag,
-} from 'antd';
+import { Form, Input, InputNumber, Switch, DatePicker, Tabs, Space, Tag } from 'antd';
 import type { Rule } from 'antd/es/form';
 import { FieldAttribute } from '@/features/schemas';
-import {
-  toLabel,
-  getTypeName,
-  getTypeParams,
-  constraintToRule,
-} from '../helpers';
+import { toLabel, getTypeName, getTypeParams, constraintToRule } from '../helpers';
 
 export interface DocumentFormFieldProps {
   attr: FieldAttribute;
@@ -30,7 +16,9 @@ export const DocumentFormField: FC<DocumentFormFieldProps> = ({ attr, localizati
   // uuid — backend auto-generates, hide from create form
   if (typeName === 'uuid') return null;
 
-  const baseRules: Rule[] = attr.required ? [{ required: true, message: `${toLabel(attr.id)} is required` }] : [];
+  const baseRules: Rule[] = attr.required
+    ? [{ required: true, message: `${toLabel(attr.id)} is required` }]
+    : [];
   const constraintRules: Rule[] = (attr.constraints ?? []).map(constraintToRule);
   const rules = [...baseRules, ...constraintRules];
 
@@ -80,7 +68,13 @@ export const DocumentFormField: FC<DocumentFormFieldProps> = ({ attr, localizati
   // boolean — Switch
   if (typeName === 'boolean') {
     return (
-      <Form.Item key={attr.id} name={attr.id} label={label} valuePropName="checked" initialValue={false}>
+      <Form.Item
+        key={attr.id}
+        name={attr.id}
+        label={label}
+        valuePropName="checked"
+        initialValue={false}
+      >
         <Switch />
       </Form.Item>
     );
@@ -108,7 +102,8 @@ export const DocumentFormField: FC<DocumentFormFieldProps> = ({ attr, localizati
   if (typeName === 'integer') {
     const minRule = constraintRules.find((r) => 'validator' in r && String(r).includes('Minimum'));
     const maxRule = constraintRules.find((r) => 'validator' in r && String(r).includes('Maximum'));
-    void minRule; void maxRule; // constraint rules already in `rules`
+    void minRule;
+    void maxRule; // constraint rules already in `rules`
     return (
       <Form.Item key={attr.id} name={attr.id} label={label} rules={rules}>
         <InputNumber

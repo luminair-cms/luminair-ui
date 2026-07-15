@@ -3,10 +3,7 @@ import { screen, waitFor } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
 import { SchemaInspector } from './SchemaInspector';
 import { renderWithProviders } from '@/__test_utils__/renderWithProviders';
-import {
-  fallbackDocumentTypes,
-  fallbackDetailedDocumentTypes,
-} from '@/__test_utils__/fixtures';
+import { fallbackDocumentTypes, fallbackDetailedDocumentTypes } from '@/__test_utils__/fixtures';
 
 // Mock the API client to return meta fixtures
 vi.mock('@/api/client', () => ({

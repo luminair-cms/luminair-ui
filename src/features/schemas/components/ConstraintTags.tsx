@@ -20,8 +20,7 @@ export const ConstraintTags: FC<ConstraintTagsProps> = ({ constraints }) => {
           {Object.entries(c)
             .map(([k, v]) => {
               // Constraint values may be nested objects (e.g. { decimal: { precision, scale } })
-              const display =
-                v !== null && typeof v === 'object' ? JSON.stringify(v) : String(v);
+              const display = v !== null && typeof v === 'object' ? JSON.stringify(v) : String(v);
               return `${k}: ${display}`;
             })
             .join(', ')}

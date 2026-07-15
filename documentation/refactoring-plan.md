@@ -790,13 +790,15 @@ The original file has been deleted. All test imports already use `@/__test_utils
 
 ---
 
-## Phase 7: Cleanup & Polish
+## Phase 7: Cleanup & Polish ✅ **COMPLETE**
 
 **Goal**: Final consistency pass on naming, exports, and documentation.
 
 **Estimated effort**: Small.
 
-### Step 7.1 — Remove retired `CreateDocumentDrawer` remnants
+### Step 7.1 — Remove retired `CreateDocumentDrawer` remnants ✅ **DONE**
+
+> **Implemented**: Deleted all remnants and the entire `CreateDocumentDrawer` directory in Step 2.1.
 
 After Phase 2, the `src/components/CreateDocumentDrawer/` directory will contain only
 its moved-out files' new paths. What remains after Step 2.1 is:
@@ -805,7 +807,10 @@ its moved-out files' new paths. What remains after Step 2.1 is:
 
 The directory itself should be deleted in Step 2.1 once all files are moved out.
 
-### Step 7.2 — Ensure all barrel exports are consistent
+### Step 7.2 — Ensure all barrel exports are consistent ✅ **DONE**
+
+> **Implemented**: Verified that all directories (`api`, `components`, `features/content`, `features/schemas`,
+> `features/settings`, `hooks`, `layout`, `store`, `theme`) have consistent `index.ts` barrel export files.
 
 Every directory with multiple files should have an `index.ts`:
 
@@ -821,7 +826,9 @@ src/store/index.ts
 src/theme/index.ts
 ```
 
-### Step 7.3 — Document the dual-export pattern
+### Step 7.3 — Document the dual-export pattern ✅ **DONE**
+
+> **Implemented**: Appended Export Conventions section to `.agents/AGENTS.md` on 2026-07-15.
 
 Add a comment in `AGENTS.md` explaining the named + default export pattern for `lazy()`-loaded pages:
 
@@ -832,11 +839,15 @@ Add a comment in `AGENTS.md` explaining the named + default export pattern for `
   Both the named and default export reference the same component declaration.
 ```
 
-### Step 7.4 — Update the README directory structure
+### Step 7.4 — Update the README directory structure ✅ **DONE**
+
+> **Implemented**: Updated `README.md` to match the exact post-refactoring tree layout and removed Tailwind reference on 2026-07-15.
 
 Update the directory tree in `README.md` to reflect the actual structure after all refactoring is complete. Remove the references to `tailwind.config.js` (line 111 of README — Tailwind was excluded from the project).
 
-### Step 7.5 — Run final checks
+### Step 7.5 — Run final checks ✅ **DONE**
+
+> **Implemented**: Ran and verified formatting and compilation with zero issues on 2026-07-15.
 
 ```bash
 pnpm lint
@@ -847,9 +858,9 @@ pnpm dlx prettier --check src/
 
 ### Verification
 
-- [ ] All four commands pass cleanly.
-- [ ] README directory tree matches `find src/ -type d | sort`.
-- [ ] No dead files or empty directories remain.
+- [x] All four commands pass cleanly (verified oxlint, tsc, vitest, and prettier match formatting rules).
+- [x] README directory tree matches `find src/ -type d | sort`.
+- [x] No dead files or empty directories remain.
 
 ---
 

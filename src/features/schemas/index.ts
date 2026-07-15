@@ -8,4 +8,3 @@ export { SchemaList } from './components/SchemaList';
 
 export { useDocumentTypes, useDetailedDocumentType } from './hooks/useSchemas';
 export * from './types';
-

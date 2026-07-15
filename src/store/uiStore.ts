@@ -7,6 +7,7 @@ interface UIState {
 
 export const useUIStore = create<UIState>((set) => ({
   themeMode: 'light',
-  toggleThemeMode: () => set((state) => ({ themeMode: state.themeMode === 'light' ? 'dark' : 'light' })),
+  toggleThemeMode: () =>
+    set((state) => ({ themeMode: state.themeMode === 'light' ? 'dark' : 'light' })),
 }));
 export default useUIStore;

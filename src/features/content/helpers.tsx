@@ -18,9 +18,7 @@ interface RelationItem {
 
 /** Convert a snake_case or kebab-case id to a human-readable Title Case label */
 export const toLabel = (id: string) =>
-  id
-    .replace(/[-_]/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  id.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
 /**
  * Extract the primary type name from a FieldAttribute.type.
@@ -189,5 +187,3 @@ export const renderLocalizedCell = (val: unknown) => {
   }
   return <Text>{String(val)}</Text>;
 };
-
-

@@ -49,7 +49,6 @@ const renderView = (url: string) =>
     { initialEntries: [url] },
   );
 
-
 describe('DocumentEditView Page', () => {
   it('renders loading spin initially', () => {
     renderView('/documents/brands/b1-uuid-1');

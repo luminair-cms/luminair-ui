@@ -5,12 +5,7 @@ export { DocumentTable } from './components/DocumentTable';
 export { PublishButton } from './components/PublishButton';
 export { DocumentList } from './components/DocumentList';
 
-
-export {
-  useDocuments,
-  useDocument,
-  useDocumentSearch,
-} from './hooks/useDocuments';
+export { useDocuments, useDocument, useDocumentSearch } from './hooks/useDocuments';
 
 export {
   useCreateDocument,
@@ -20,4 +15,3 @@ export {
 
 export { renderLocalizedCell } from './helpers';
 export * from './types';
-

@@ -15,12 +15,13 @@ import {
   Divider,
   theme,
 } from 'antd';
+import { ArrowLeftOutlined, SaveOutlined, CloudUploadOutlined } from '@ant-design/icons';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  CloudUploadOutlined,
-} from '@ant-design/icons';
-import { useDetailedDocumentType, isRelationAttribute, FieldAttribute, RelationAttribute } from '@/features/schemas';
+  useDetailedDocumentType,
+  isRelationAttribute,
+  FieldAttribute,
+  RelationAttribute,
+} from '@/features/schemas';
 import { useDocument } from '../hooks/useDocuments';
 import {
   useCreateDocument,
@@ -181,11 +182,21 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
           ]}
           style={{ marginBottom: 12 }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            flexWrap: 'wrap',
+            gap: 16,
+          }}
+        >
           <div>
             <Space align="center" size={12}>
               <Title level={2} style={{ margin: 0 }}>
-                {isNew ? `Create New ${schema.info.singularName}` : `Edit ${schema.info.singularName}`}
+                {isNew
+                  ? `Create New ${schema.info.singularName}`
+                  : `Edit ${schema.info.singularName}`}
               </Title>
               {!isNew && schema.options?.draftAndPublish && (
                 <Tag
@@ -193,8 +204,8 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
                     documentStatus === 'published'
                       ? 'success'
                       : documentStatus === 'modified'
-                      ? 'processing'
-                      : 'warning'
+                        ? 'processing'
+                        : 'warning'
                   }
                   style={{ textTransform: 'uppercase', fontWeight: 'bold' }}
                 >
@@ -239,13 +250,7 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
       </div>
 
       {errorMessage && (
-        <Alert
-          type="error"
-          message={errorMessage}
-          showIcon
-          closable
-          style={{ marginBottom: 20 }}
-        />
+        <Alert type="error" message={errorMessage} showIcon closable style={{ marginBottom: 20 }} />
       )}
 
       {publishErrorMessage && (
@@ -259,12 +264,7 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
       )}
 
       <Card>
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          scrollToFirstError
-        >
+        <Form form={form} layout="vertical" onFinish={onFinish} scrollToFirstError>
           {/* Field attributes */}
           {schema.attributes
             .filter((a) => !isRelationAttribute(a))
@@ -279,7 +279,11 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
           {/* Relation attributes */}
           {schema.attributes.some((a) => isRelationAttribute(a)) && (
             <>
-              <Divider titlePlacement="left" plain style={{ fontSize: 12, color: token.colorTextSecondary, margin: '24px 0 16px' }}>
+              <Divider
+                titlePlacement="left"
+                plain
+                style={{ fontSize: 12, color: token.colorTextSecondary, margin: '24px 0 16px' }}
+              >
                 Relations
               </Divider>
               {schema.attributes

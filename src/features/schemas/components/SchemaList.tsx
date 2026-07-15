@@ -21,9 +21,7 @@ export const SchemaList: FC<SchemaListProps> = ({ apiId }) => {
   }
 
   // Filter schemas to display depending on route param
-  const schemasToRender = apiId
-    ? documentTypes?.filter((t) => t.id === apiId)
-    : documentTypes;
+  const schemasToRender = apiId ? documentTypes?.filter((t) => t.id === apiId) : documentTypes;
 
   if (apiId && (!schemasToRender || schemasToRender.length === 0)) {
     return <Empty description={`Schema for '${apiId}' not found.`} />;

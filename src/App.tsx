@@ -28,27 +28,51 @@ const router = createBrowserRouter([
     children: [
       {
         path: '',
-        element: <Suspense fallback={routeFallback}><ContentManagerHome /></Suspense>,
+        element: (
+          <Suspense fallback={routeFallback}>
+            <ContentManagerHome />
+          </Suspense>
+        ),
       },
       {
         path: 'documents/:apiId',
-        element: <Suspense fallback={routeFallback}><DocumentListView /></Suspense>,
+        element: (
+          <Suspense fallback={routeFallback}>
+            <DocumentListView />
+          </Suspense>
+        ),
       },
       {
         path: 'documents/:apiId/:documentId',
-        element: <Suspense fallback={routeFallback}><DocumentEditView /></Suspense>,
+        element: (
+          <Suspense fallback={routeFallback}>
+            <DocumentEditView />
+          </Suspense>
+        ),
       },
       {
         path: 'schemas',
-        element: <Suspense fallback={routeFallback}><SchemaInspector /></Suspense>,
+        element: (
+          <Suspense fallback={routeFallback}>
+            <SchemaInspector />
+          </Suspense>
+        ),
       },
       {
         path: 'schemas/:apiId',
-        element: <Suspense fallback={routeFallback}><SchemaInspector /></Suspense>,
+        element: (
+          <Suspense fallback={routeFallback}>
+            <SchemaInspector />
+          </Suspense>
+        ),
       },
       {
         path: 'settings',
-        element: <Suspense fallback={routeFallback}><Settings /></Suspense>,
+        element: (
+          <Suspense fallback={routeFallback}>
+            <Settings />
+          </Suspense>
+        ),
       },
     ],
   },

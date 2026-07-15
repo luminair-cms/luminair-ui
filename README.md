@@ -97,18 +97,17 @@ We choose **Zustand** as our primary global state manager. It is lightweight, st
 luminair-ui/
 ├── public/
 ├── src/
-│   ├── api/             # React Query hooks and Axios fetchers
-│   ├── components/      # Common UI components (buttons, inputs, tables, modals)
-│   ├── features/        # Feature modules
-│   │   ├── content/     # Dynamic Content lists and forms
-│   │   ├── schemas/     # Schema builder/visualizer
-│   │   └── settings/    # CMS configuration
-│   ├── hooks/           # Custom utility hooks
-│   ├── layout/          # Dashboard Shell & sidebar navigation
-│   ├── theme/           # Design system configuration
-│   ├── App.tsx          # Main entry point and router definitions
-│   └── main.tsx
-├── tailwind.config.js
+│   ├── api/             # API client, request helpers, and central types
+│   ├── components/      # Common shared UI widgets
+│   ├── features/        # Feature modules (isolated domain components)
+│   │   ├── content/     # Dynamic Content lists, forms, and relations
+│   │   ├── schemas/     # Schema visualizer and detailed cards
+│   │   └── settings/    # Global settings panel
+│   ├── hooks/           # Shared custom utility hooks
+│   ├── layout/          # Dashboard Shell and sidebar navigation
+│   ├── theme/           # Central design system configuration
+│   ├── App.tsx          # Route orchestration and application shell
+│   └── main.tsx         # Main hydration entrypoint
 ├── vite.config.ts
 └── tsconfig.json
 ```

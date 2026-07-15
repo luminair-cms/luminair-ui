@@ -22,7 +22,8 @@ export const SchemaOverview: FC = () => {
     <Typography style={{ width: '100%' }}>
       <Title level={2}>Content Manager Overview</Title>
       <Paragraph style={{ marginBottom: 32 }}>
-        Select a dynamic document type from the sidebar or click one of the registered models below to manage its content records.
+        Select a dynamic document type from the sidebar or click one of the registered models below
+        to manage its content records.
       </Paragraph>
 
       <Row gutter={[16, 16]}>
@@ -37,13 +38,26 @@ export const SchemaOverview: FC = () => {
                 </Space>
               }
               extra={
-                <span style={{ fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase', color: token.colorTextSecondary }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 'bold',
+                    textTransform: 'uppercase',
+                    color: token.colorTextSecondary,
+                  }}
+                >
                   {type.type}
                 </span>
               }
-              style={{ background: 'var(--antd-color-bg-container)', border: '1px solid var(--antd-color-border-secondary)' }}
+              style={{
+                background: 'var(--antd-color-bg-container)',
+                border: '1px solid var(--antd-color-border-secondary)',
+              }}
             >
-              <Paragraph ellipsis={{ rows: 2 }} style={{ color: token.colorTextSecondary, minHeight: 44 }}>
+              <Paragraph
+                ellipsis={{ rows: 2 }}
+                style={{ color: token.colorTextSecondary, minHeight: 44 }}
+              >
                 {type.description || 'No description provided.'}
               </Paragraph>
               <Link to={`/documents/${type.id}`}>
