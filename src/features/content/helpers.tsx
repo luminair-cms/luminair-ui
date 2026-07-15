@@ -1,13 +1,16 @@
 import type { Rule } from 'antd/es/form';
+import { Space, Tag, Typography } from 'antd';
 // @ts-ignore
 import dayjs from 'dayjs';
 import {
   FieldAttribute,
   FieldConstraint,
-  DocumentRecord,
   Attribute,
   isRelationAttribute,
-} from '@/api/types';
+} from '@/features/schemas';
+import { DocumentRecord } from './types';
+
+const { Text } = Typography;
 
 /** Convert a snake_case or kebab-case id to a human-readable Title Case label */
 export const toLabel = (id: string) =>
@@ -148,3 +151,39 @@ export const documentToFormValues = (
 
   return values;
 };
+
+export const renderLocalizedCell = (val: unknown) => {
+  if (!val) return <Text type="secondary">—</Text>;
+  if (typeof val === 'object' && !Array.isArray(val)) {
+    return (
+      <Space size={[4, 4]} wrap>
+        {Object.entries(val).map(([locale, text]) => (
+          <Tag
+            key={locale}
+            style={{
+              margin: 0,
+              fontSize: 11,
+              background: 'var(--antd-color-bg-container)',
+              border: '1px solid var(--antd-color-border-secondary)',
+            }}
+          >
+            <span
+              style={{
+                fontWeight: 'bold',
+                color: '#a5b4fc',
+                textTransform: 'uppercase',
+                marginRight: 4,
+              }}
+            >
+              {locale}
+            </span>
+            {String(text)}
+          </Tag>
+        ))}
+      </Space>
+    );
+  }
+  return <Text>{String(val)}</Text>;
+};
+
+

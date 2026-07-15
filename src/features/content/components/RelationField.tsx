@@ -1,8 +1,8 @@
 import { FC } from 'react';
 import { Form, Select, Space, Tag, Typography } from 'antd';
-import { RelationAttribute } from '@/api/types';
-import { useDocumentSearch } from '@/api/hooks';
-import { toLabel, getDocumentLabel } from './helpers';
+import { RelationAttribute } from '@/features/schemas';
+import { useDocumentSearch } from '../hooks/useDocuments';
+import { toLabel, getDocumentLabel } from '../helpers';
 
 const { Text } = Typography;
 

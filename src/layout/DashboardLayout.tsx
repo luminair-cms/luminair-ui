@@ -11,7 +11,7 @@ import {
   MoonOutlined,
 } from '@ant-design/icons';
 import { useUIStore } from '@/store';
-import { useDocumentTypes } from '@/api';
+import { useDocumentTypes } from '@/features/schemas';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const { Header, Sider, Content } = Layout;

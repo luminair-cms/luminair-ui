@@ -10,13 +10,13 @@ import {
   Tag,
 } from 'antd';
 import type { Rule } from 'antd/es/form';
-import { FieldAttribute } from '@/api/types';
+import { FieldAttribute } from '@/features/schemas';
 import {
   toLabel,
   getTypeName,
   getTypeParams,
   constraintToRule,
-} from './helpers';
+} from '../helpers';
 
 export interface DocumentFormFieldProps {
   attr: FieldAttribute;

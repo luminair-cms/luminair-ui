@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { toLabel, getTypeName, documentToFormValues } from './helpers';
-import { Attribute, DocumentRecord } from '@/api/types';
+import { Attribute } from '@/features/schemas';
+import { DocumentRecord } from './types';
 
-describe('CreateDocumentDrawer helpers', () => {
+describe('content helpers', () => {
   describe('toLabel', () => {
     it('converts snake_case/kebab-case to Title Case', () => {
       expect(toLabel('first_name')).toBe('First Name');
