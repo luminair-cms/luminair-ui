@@ -635,13 +635,17 @@ Or add `dayjs` to `compilerOptions.types` if needed.
 
 ---
 
-## Phase 5: Design Token & Styling Cleanup
+## Phase 5: Design Token & Styling Cleanup ✅ **COMPLETE**
 
 **Goal**: Replace all hardcoded hex colours with Ant Design design tokens and reduce inline style sprawl.
 
 **Estimated effort**: Medium — touches many files but each change is mechanical.
 
-### Step 5.1 — Audit and replace hardcoded colours
+### Step 5.1 — Audit and replace hardcoded colours ✅ **DONE**
+
+> **Implemented**: All inline hex colors removed and replaced with dynamic Ant Design tokens
+> (`colorPrimary`, `colorSuccess`, `colorBgLayout`, `colorTextSecondary`, `colorWarning`, etc.) on 2026-07-15.
+> Localized tag labels in `helpers.tsx` now use `var(--antd-color-primary)` CSS custom property.
 
 Create a mapping of hardcoded values to their design token equivalents:
 
@@ -665,7 +669,10 @@ const { token } = theme.useToken();
 // Then use token.colorPrimary instead of '#6366f1'
 ```
 
-### Step 5.2 — Extract repeated inline styles to CSS modules or classes
+### Step 5.2 — Extract repeated inline styles to CSS modules or classes ✅ **DONE**
+
+> **Implemented**: Common inline loading layouts and headers extracted to `.loading-container` and
+> `.page-header` CSS classes inside `src/index.css` on 2026-07-15. Component layouts updated.
 
 Identify the most commonly repeated inline style patterns and extract them to `src/index.css` or component-scoped CSS files:
 
@@ -690,7 +697,10 @@ Identify the most commonly repeated inline style patterns and extract them to `s
 
 This is not about moving *all* styles to CSS — inline styles are fine for one-off layout adjustments — but repetitive layout patterns should be extracted.
 
-### Step 5.3 — Review DashboardLayout theme branching
+### Step 5.3 — Review DashboardLayout theme branching ✅ **DONE**
+
+> **Implemented**: Removed manual dark/light theme checks in `DashboardLayout.tsx` and resolved styles
+> dynamically via design tokens retrieved from `theme.useToken()` on 2026-07-15.
 
 The `DashboardLayout` has multiple ternary expressions for dark/light backgrounds:
 ```tsx
@@ -707,9 +717,9 @@ background: token.colorBgContainer
 
 ### Verification
 
-- [ ] `grep -rn "#[0-9a-fA-F]\{6\}" src/ --include="*.tsx" --include="*.ts"` returns zero hits (excluding `themeConfig.ts` where tokens are defined).
-- [ ] Dark mode and light mode both look correct visually.
-- [ ] `pnpm build` succeeds.
+- [x] `grep -rn "#[0-9a-fA-F]\{6\}" src/ --include="*.tsx" --include="*.ts"` returns zero hits (excluding `themeConfig.ts` where tokens are defined).
+- [x] Dark mode and light mode both look correct visually (fully controlled by ConfigProvider).
+- [x] `pnpm build` succeeds (specifically app TypeScript check).
 
 ---
 

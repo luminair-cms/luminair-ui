@@ -22,7 +22,14 @@ export const DashboardLayout: FC = () => {
   const { themeMode, toggleThemeMode } = useUIStore();
   const { data: documentTypes, isLoading } = useDocumentTypes();
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    token: {
+      colorBgContainer,
+      borderRadiusLG,
+      colorBgLayout,
+      colorText,
+      colorWarning,
+      colorTextSecondary,
+    },
   } = theme.useToken();
 
   // Dynamic Sidebar Menu Items
@@ -63,7 +70,7 @@ export const DashboardLayout: FC = () => {
         collapsible
         collapsed={collapsed}
         theme={themeMode}
-        style={{ background: themeMode === 'dark' ? '#1e293b' : '#ffffff' }}
+        style={{ background: colorBgContainer }}
       >
         <div
           style={{
@@ -71,7 +78,7 @@ export const DashboardLayout: FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: themeMode === 'dark' ? '#0f172a' : '#f1f5f9',
+            background: colorBgLayout,
             padding: '0 8px',
             transition: 'background 0.2s',
           }}
@@ -83,7 +90,7 @@ export const DashboardLayout: FC = () => {
               style={{ width: 32, height: 32, borderRadius: 6, display: 'block' }}
             />
             {!collapsed && (
-              <span style={{ fontWeight: 'bold', fontSize: 16, color: themeMode === 'dark' ? '#f8fafc' : '#0f172a' }}>
+              <span style={{ fontWeight: 'bold', fontSize: 16, color: colorText }}>
                 Luminair
               </span>
             )}
@@ -101,7 +108,7 @@ export const DashboardLayout: FC = () => {
             selectedKeys={[location.pathname]}
             defaultOpenKeys={['content-manager', 'schema-inspector']}
             items={menuItems}
-            style={{ background: themeMode === 'dark' ? '#1e293b' : '#ffffff', borderRight: 0 }}
+            style={{ background: colorBgContainer, borderRight: 0 }}
           />
         )}
       </Sider>
@@ -126,11 +133,11 @@ export const DashboardLayout: FC = () => {
           <Space size="large">
             <Button
               type="text"
-              icon={themeMode === 'dark' ? <SunOutlined style={{ color: '#f59e0b' }} /> : <MoonOutlined />}
+              icon={themeMode === 'dark' ? <SunOutlined style={{ color: colorWarning }} /> : <MoonOutlined />}
               onClick={toggleThemeMode}
               style={{ fontSize: 16 }}
             />
-            <span style={{ color: '#64748b' }}>v0.1.0</span>
+            <span style={{ color: colorTextSecondary }}>v0.1.0</span>
           </Space>
         </Header>
         <Content

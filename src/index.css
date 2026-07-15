@@ -58,3 +58,19 @@ body.light ::-webkit-scrollbar-thumb {
 body.light ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Shared layout patterns */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+

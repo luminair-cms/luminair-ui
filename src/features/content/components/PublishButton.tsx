@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Button, message } from 'antd';
+import { Button, message, theme } from 'antd';
 import { usePublishDocument } from '../hooks/useDocumentMutations';
 
 export interface PublishButtonProps {
@@ -9,6 +9,7 @@ export interface PublishButtonProps {
 
 export const PublishButton: FC<PublishButtonProps> = ({ apiId, documentId }) => {
   const publishMutation = usePublishDocument(apiId, documentId);
+  const { token } = theme.useToken();
 
   const handlePublish = () => {
     publishMutation.mutate(undefined, {
@@ -27,7 +28,7 @@ export const PublishButton: FC<PublishButtonProps> = ({ apiId, documentId }) => 
       type="primary"
       loading={publishMutation.isPending}
       onClick={handlePublish}
-      style={{ background: '#10b981', borderColor: '#10b981' }}
+      style={{ background: token.colorSuccess, borderColor: token.colorSuccess }}
     >
       Publish
     </Button>

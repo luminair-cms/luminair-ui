@@ -13,6 +13,7 @@ import {
   Alert,
   message,
   Divider,
+  theme,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -40,6 +41,7 @@ export interface DocumentFormProps {
 export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
+  const { token } = theme.useToken();
 
   const isNew = documentId === 'new';
 
@@ -126,7 +128,7 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
+      <div className="loading-container" style={{ height: '300px' }}>
         <Spin size="large" tip="Loading document details..." />
       </div>
     );
@@ -216,9 +218,9 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
                 onClick={handlePublish}
                 disabled={documentStatus === 'published'}
                 style={{
-                  background: documentStatus !== 'published' ? '#10b981' : undefined,
-                  color: documentStatus !== 'published' ? '#fff' : undefined,
-                  borderColor: documentStatus !== 'published' ? '#10b981' : undefined,
+                  background: documentStatus !== 'published' ? token.colorSuccess : undefined,
+                  color: documentStatus !== 'published' ? token.colorTextLightSolid : undefined,
+                  borderColor: documentStatus !== 'published' ? token.colorSuccess : undefined,
                 }}
               >
                 Publish
@@ -277,7 +279,7 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
           {/* Relation attributes */}
           {schema.attributes.some((a) => isRelationAttribute(a)) && (
             <>
-              <Divider titlePlacement="left" plain style={{ fontSize: 12, color: '#6b7280', margin: '24px 0 16px' }}>
+              <Divider titlePlacement="left" plain style={{ fontSize: 12, color: token.colorTextSecondary, margin: '24px 0 16px' }}>
                 Relations
               </Divider>
               {schema.attributes

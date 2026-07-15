@@ -14,7 +14,7 @@ export const SchemaList: FC<SchemaListProps> = ({ apiId }) => {
 
   if (isLoading && !documentTypes) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+      <div className="loading-container">
         <Spin size="large" tip="Loading schemas list..." />
       </div>
     );

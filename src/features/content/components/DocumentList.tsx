@@ -19,7 +19,7 @@ export const DocumentList: FC<DocumentListProps> = ({ apiId }) => {
 
   if (schemaLoading || docsLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+      <div className="loading-container">
         <Spin size="large" tip="Loading records and schema..." />
       </div>
     );
@@ -31,7 +31,7 @@ export const DocumentList: FC<DocumentListProps> = ({ apiId }) => {
 
   return (
     <div style={{ width: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div className="page-header">
         <Typography>
           <Title level={2}>{schema.title}</Title>
           <Paragraph type="secondary">{schema.info.description || 'Manage dynamic database entries.'}</Paragraph>

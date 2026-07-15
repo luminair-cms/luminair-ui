@@ -174,7 +174,7 @@ export const renderLocalizedCell = (val: unknown) => {
             <span
               style={{
                 fontWeight: 'bold',
-                color: '#a5b4fc',
+                color: 'var(--antd-color-primary)',
                 textTransform: 'uppercase',
                 marginRight: 4,
               }}
