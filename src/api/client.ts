@@ -3,11 +3,12 @@ import type { ProblemDetails } from './types';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 /**
- * Unified API Client wrapping the native Fetch API.
+ * Query helper for GET requests.
  * Handles base URL configuration, automatically formats headers,
- * and throws structured errors on non-2xx responses so TanStack Query handles errors.
+ * unwraps the `{ data: T }` response envelope, and throws a structured
+ * `Error` on non-2xx responses so TanStack Query handles errors.
  */
-export async function apiClient<T>(path: string, options?: RequestInit): Promise<T> {
+export async function apiQuery<T>(path: string, options?: RequestInit): Promise<T> {
   // Combine base URL and target endpoint path
   const url = `${BASE_URL}${path}`;
 
@@ -42,7 +43,7 @@ export async function apiClient<T>(path: string, options?: RequestInit): Promise
 /**
  * Mutation helper for non-GET requests (POST, PUT, DELETE).
  *
- * Unlike {@link apiClient}, this function:
+ * Unlike {@link apiQuery}, this function:
  * - Returns both `data` and `headers` so callers can inspect response headers
  *   (e.g., the `Location` header from a 201 Created response).
  * - Throws a {@link ProblemDetails} object on non-2xx responses, giving
@@ -80,4 +81,4 @@ export async function apiMutate<TResponse, TBody = unknown>(
   return { data, headers: response.headers };
 }
 
-export default apiClient;
+export default apiQuery;

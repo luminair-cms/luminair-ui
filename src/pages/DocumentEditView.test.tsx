@@ -1,38 +1,63 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { describe, it, expect, vi } from 'vitest';
+import { screen, waitFor } from '@testing-library/react';
+import { Route, Routes } from 'react-router-dom';
 import { DocumentEditView } from './DocumentEditView';
+import { renderWithProviders } from '@/__test_utils__/renderWithProviders';
+import {
+  fallbackDocumentTypes,
+  fallbackDetailedDocumentTypes,
+  fallbackDocuments,
+} from '@/__test_utils__/fixtures';
 
-// Helper wrapper to render components with routing and query context
-const renderWithProviders = (initialEntries: string[]) => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
+// vi.mock is hoisted to the top of the file by vitest's transform step,
+// so it MUST appear at module scope — calling it inside a helper function
+// (like mockApiClient() from __test_utils__/mockApi.ts) does not work.
+// The mockApi.ts utility documents the canonical routing logic and serves
+// as the reference for future MSW-based mocking (Step 1.4 Option B).
+vi.mock('@/api/client', () => ({
+  apiQuery: vi.fn((path: string) => {
+    if (path === '/api/meta/documents') {
+      return Promise.resolve(fallbackDocumentTypes);
+    }
+    const detailedMatch = path.match(/^\/api\/meta\/documents\/([^/]+)$/);
+    if (detailedMatch) {
+      return Promise.resolve(fallbackDetailedDocumentTypes[detailedMatch[1]] ?? null);
+    }
+    // Match single-document path before list path (more specific first)
+    const docMatch = path.match(/^\/api\/documents\/([^/]+)\/([^/?]+)/);
+    if (docMatch) {
+      const [, apiId, documentId] = docMatch;
+      const docs = fallbackDocuments[apiId] ?? [];
+      return Promise.resolve(docs.find((d) => d.documentId === documentId) ?? null);
+    }
+    const listMatch = path.match(/^\/api\/documents\/([^/]+)$/);
+    if (listMatch) {
+      return Promise.resolve(fallbackDocuments[listMatch[1]] ?? []);
+    }
+    return Promise.resolve(null);
+  }),
+  apiMutate: vi.fn(),
+}));
 
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={initialEntries}>
-        <Routes>
-          <Route path="/documents/:apiId/:documentId" element={<DocumentEditView />} />
-        </Routes>
-      </MemoryRouter>
-    </QueryClientProvider>
+// DocumentEditView requires route params (:apiId, :documentId), so we render
+// it inside a Routes tree with the matching path pattern.
+const renderView = (url: string) =>
+  renderWithProviders(
+    <Routes>
+      <Route path="/documents/:apiId/:documentId" element={<DocumentEditView />} />
+    </Routes>,
+    { initialEntries: [url] },
   );
-};
+
 
 describe('DocumentEditView Page', () => {
   it('renders loading spin initially', () => {
-    renderWithProviders(['/documents/brands/b1-uuid-1']);
+    renderView('/documents/brands/b1-uuid-1');
     expect(screen.getByText(/loading document details.../i)).toBeInTheDocument();
   });
 
   it('renders editing form populated with fallback mock data when loading completes', async () => {
-    renderWithProviders(['/documents/brands/b1-uuid-1']);
+    renderView('/documents/brands/b1-uuid-1');
 
     // Wait for the schema and record to load (using our test environment fallbacks)
     await waitFor(() => {
@@ -48,7 +73,7 @@ describe('DocumentEditView Page', () => {
   });
 
   it('renders creation form in new mode', async () => {
-    renderWithProviders(['/documents/brands/new']);
+    renderView('/documents/brands/new');
 
     await waitFor(() => {
       expect(screen.queryByText(/loading document details.../i)).not.toBeInTheDocument();

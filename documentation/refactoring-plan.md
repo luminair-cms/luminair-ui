@@ -6,7 +6,7 @@ A detailed, step-by-step plan to resolve every issue identified in `codebase-ana
 
 ---
 
-## Phase 1: API Layer Cleanup
+## Phase 1: API Layer Cleanup ✅ **COMPLETE**
 
 **Goal**: Unify the API layer so all HTTP traffic flows through a single, typed client. Remove production-code test branches.
 
@@ -54,29 +54,80 @@ export async function apiMutate<TResponse, TBody = unknown>(
 - Return both `data` and `headers` so `useCreateDocument` can still read the `Location` header.
 - Throw `ProblemDetails` directly (instead of the generic `Error` thrown by `apiClient`) for consistent error typing in mutations.
 
-### Step 1.2 — Rewrite mutation hooks to use `apiMutate`
+### Step 1.2 — Rewrite mutation hooks to use `apiMutate` ✅ **DONE**
+
+> **Implemented**: `src/api/hooks.ts` updated on 2026-07-15.
+>
+> **Deviations / inconsistencies found relative to the spec**:
+>
+> 1. **`apiClient` → `apiQuery` rename**: By the time this step was implemented,
+>    the `apiClient` function had already been renamed to `apiQuery` in `client.ts`
+>    (a prior refactor not captured in this plan). The hooks file already imported
+>    `apiQuery`, so the import line was extended to also pull in `apiMutate`.
+>
+> 2. **`TResponse` type parameters for `useUpdateDocument` and `usePublishDocument`**:
+>    The spec says `apiMutate<{ data: DocumentRecord }>`, but `apiMutate` already
+>    unwraps the `{ data: T }` envelope internally. Using `{ data: DocumentRecord }`
+>    as `TResponse` would therefore double-unwrap and produce `undefined` at runtime.
+>    The correct type parameter is `DocumentRecord`, and the `useMutation` TData was
+>    updated from `{ data: DocumentRecord }` to `DocumentRecord` accordingly.
+>    Both `onSuccess` callers ignore the result, so there is no observable behaviour
+>    change — only the type annotation is corrected.
+>
+> 3. **`BASE_URL` removal**: Confirmed removed from `hooks.ts` (was line 6).
+>    All URL construction is now encapsulated in `apiQuery` / `apiMutate`.
 
 **File**: `src/api/hooks.ts`
 
 Replace the three mutation hooks (`useCreateDocument`, `useUpdateDocument`, `usePublishDocument`) that currently use raw `fetch()`:
 
 - `useCreateDocument`: call `apiMutate<void, CreateDocumentPayload>(path, 'POST', payload)`, then extract the document ID from the returned `headers`.
-- `useUpdateDocument`: call `apiMutate<{ data: DocumentRecord }>(path, 'PUT', payload)`.
-- `usePublishDocument`: call `apiMutate<{ data: DocumentRecord }>(path, 'POST')`.
+- `useUpdateDocument`: call `apiMutate<DocumentRecord>(path, 'PUT', payload)` *(see deviation note #2 above)*.
+- `usePublishDocument`: call `apiMutate<DocumentRecord>(path, 'POST')` *(see deviation note #2 above)*.
 
 Remove the top-level `const BASE_URL = ...` line (L6) — it's now handled inside `apiMutate`.
 
-### Step 1.3 — Remove in-code fallback data for tests
+### Step 1.3 — Remove in-code fallback data for tests ✅ **DONE**
+
+> **Implemented**: `src/api/hooks.ts`, `src/api/index.ts`, `src/api/fallbacks.ts`, and
+> `src/pages/DocumentEditView.test.tsx` updated on 2026-07-15.
+>
+> **Deviations / observations relative to the spec**:
+>
+> 1. **`apiClient` → `apiQuery` in spec snippet**: The code example in the spec
+>    still references the old name `apiClient`. The actual implementation uses `apiQuery`
+>    (already renamed in `client.ts`). Applied as `apiQuery` in the simplified hooks.
+>
+> 2. **`fallbacks.ts` not deleted — only retired during Step 1.3**: The spec says to "move" the file.
+>    The file `src/api/fallbacks.ts` was left in place at Step 1.3 (not deleted) because
+>    Step 7.1 was the designated point for removing dead files.
+>    Its production use was fully severed: the import was removed from `hooks.ts`
+>    and the re-export was removed from `api/index.ts`.
+>    **Update**: `src/api/fallbacks.ts` was deleted during pre-Phase-2 cleanup (2026-07-15)
+>    — content already lived in `__test_utils__/fixtures.ts`.
+>
+> 3. **Test mocking done as part of 1.3 (not deferred to 1.4)**: The test
+>    `DocumentEditView.test.tsx` relied entirely on the now-removed fallback-in-queryFn
+>    mechanism. Removing the fallbacks without updating the test would have broken the
+>    test suite. Therefore the `vi.mock('@/api/client', ...)` approach (Option A from
+>    Step 1.4) was applied directly to `DocumentEditView.test.tsx` as part of this step,
+>    so tests continue to pass. Step 1.4 remains relevant for the shared `mockApi.ts`
+>    utility and for future tests.
+>
+> 4. **Test stderr is now clean**: Before this step, the test run printed several
+>    `console.warn` lines about URL parse errors falling back to mock data.
+>    These are completely gone after the change — only the pre-existing Ant Design
+>    `Spin` deprecation warning remains.
 
 **File**: `src/api/hooks.ts`
 
-Remove all `try/catch` blocks that fall back to `fallbackXxx` data inside `queryFn`. The hooks should simply call `apiClient<T>(path)` without any test-mode branching:
+Remove all `try/catch` blocks that fall back to `fallbackXxx` data inside `queryFn`. The hooks now simply call `apiQuery<T>(path)` (not `apiClient` as the spec snippet shows — see deviation #1 above):
 
 ```ts
 export const useDocumentTypes = () =>
   useQuery<DocumentResponse[]>({
     queryKey: ['documentTypes'],
-    queryFn: () => apiClient<DocumentResponse[]>('/api/meta/documents'),
+    queryFn: () => apiQuery<DocumentResponse[]>('/api/meta/documents'),
   });
 ```
 
@@ -88,7 +139,30 @@ Move this file to a test utilities directory (e.g., `src/__test_utils__/fixtures
 
 Remove `export * from './fallbacks'` — test fixtures should not be part of the public API module.
 
-### Step 1.4 — Set up proper test mocking
+### Step 1.4 — Set up proper test mocking ✅ **DONE**
+
+> **Implemented**: `src/__test_utils__/mockApi.ts` and `src/__test_utils__/renderWithProviders.tsx`
+> created on 2026-07-15. `src/pages/DocumentEditView.test.tsx` refactored to use shared helpers.
+>
+> **Key deviation discovered — vitest `vi.mock` hoisting constraint**:
+> The spec says to call `mockApiClient()` in a `beforeEach` block, but this
+> does **not work** with vitest's module-mock system. `vi.mock(...)` is statically
+> hoisted to the top of the file by vitest's transform step before any code runs.
+> When wrapped inside `mockApiClient()` and called at runtime, the mock factory
+> executes after module evaluation — at which point the real `@/api/client` module
+> has already been imported and bound. The mock is silently ignored, real `fetch`
+> calls occur, and tests fail with `Content type 'brands' schema not found.`
+>
+> **Resolution**: `vi.mock('@/api/client', () => ({ ... }))` must be written
+> verbatim at the **top level** of each test file. `mockApi.ts` was re-purposed
+> as a **reference document** containing:
+> - The canonical path-routing logic (single source of truth)
+> - The full hoisting constraint explanation
+> - A pointer to future MSW migration (Option B)
+>
+> `renderWithProviders.tsx` was created as a fully working shared helper
+> (no hoisting constraint) and is already adopted by `DocumentEditView.test.tsx`,
+> eliminating 15 lines of provider boilerplate per test file.
 
 Create a shared test utility that mocks the `apiClient` module, or install MSW for network-level mocking:
 
@@ -113,11 +187,98 @@ Update existing test files to call `mockApiClient()` in a `beforeEach` block.
 
 ### Verification
 
-- [x] `pnpm exec tsc --noEmit` passes — zero type errors after Step 1.1.
+- [x] `pnpm exec tsc --noEmit` passes — zero type errors after Phase 1 (Steps 1.1–1.4).
 - [ ] `pnpm build` succeeds — blocked by pre-existing `dayjs` resolution error in `helpers.ts` (addressed in Step 4.3); not introduced by this change.
-- [ ] `pnpm test` passes — tests still work with the new mock approach.
-- [ ] `pnpm lint` clean.
+- [x] `pnpm exec vitest run` passes — 7/7 tests pass after Step 1.4. `renderWithProviders` shared helper adopted.
+- [x] `pnpm exec oxlint src` — 0 warnings, 0 errors after Phase 1 completion.
 - [ ] Manually confirm dev server can fetch from the backend proxy (no regressions).
+
+---
+
+## Pre-Phase 2 Analysis ✅ **COMPLETE**
+
+> **Performed**: 2026-07-15, after Phase 1 completion and before starting Phase 2.
+
+### Verified state at Phase 1 exit
+
+| Check | Result |
+|---|---|
+| `pnpm exec tsc --noEmit` | ✅ 0 errors |
+| `pnpm exec vitest run` | ✅ 7/7 tests pass, clean stderr |
+| `pnpm exec oxlint src` | ✅ 0 warnings, 0 errors |
+| `pnpm build` | ❌ Pre-existing `dayjs` unresolved import in `helpers.ts` (Step 4.3) |
+
+### Current `src/` file tree
+
+```
+src/
+├── __test_utils__/
+│   ├── fixtures.ts              ← moved from api/fallbacks.ts (Step 1.3)
+│   ├── mockApi.ts               ← reference mock routing logic + hoisting docs (Step 1.4)
+│   └── renderWithProviders.tsx  ← shared render helper (Step 1.4 / 6.1)
+│
+├── api/
+│   ├── client.ts      ← apiQuery + apiMutate (Phase 1 complete)
+│   ├── hooks.ts       ← clean: no try/catch, no BASE_URL, no raw fetch
+│   ├── index.ts       ← exports: types, hooks, client only
+│   └── types.ts       ← all domain types (to be split in Step 2.5)
+│
+├── components/
+│   ├── CreateDocumentDrawer/
+│   │   ├── CreateDocumentDrawer.tsx  ← ⚠️ DEAD FILE — empty export stub; delete in Step 2.1
+│   │   ├── DocumentFormField.tsx     ← ⚠️ MISPLACED — contains API call; move in Step 2.1
+│   │   ├── RelationField.tsx         ← ⚠️ MISPLACED — contains API call; move in Step 2.1
+│   │   ├── helpers.test.ts           ← move alongside helpers in Step 2.1
+│   │   ├── helpers.ts                ← ⚠️ MISPLACED + has @ts-ignore; move in Step 2.1, fix in Step 4.3
+│   │   └── index.ts                  ← barrel; delete in Step 2.1
+│   ├── ErrorBoundary.tsx             ← ✅ correct location
+│   └── index.ts                      ← ✅ exports only ErrorBoundary
+│
+├── pages/
+│   ├── ContentManagerHome.tsx        ← moderate (~65 lines), reasonable
+│   ├── DocumentEditView.test.tsx     ← ✅ updated: uses renderWithProviders + vi.mock
+│   ├── DocumentEditView.tsx          ← ⚠️ FAT PAGE — 296 lines; extract form in Step 2.1
+│   ├── DocumentListView.tsx          ← ⚠️ FAT PAGE — 179 lines; extract table/button in Step 2.1
+│   ├── SchemaInspector.tsx           ← ⚠️ FAT PAGE — 203 lines; extract cards in Step 2.2
+│   ├── Settings.tsx                  ← thin (15 lines)
+│   └── index.ts                      ← barrel
+│
+├── store/
+│   ├── index.ts       ← ⚠️ empty barrel — update to re-export useUIStore in Step 7.2
+│   └── uiStore.ts     ← ✅ correct location, minimal
+│
+├── App.tsx             ← ✅ router config, thin
+├── DashboardLayout.tsx ← ⚠️ MISPLACED — move to src/layout/ in Step 3.1
+├── index.css
+├── main.tsx
+├── setupTests.ts
+├── themeConfig.ts      ← ⚠️ MISPLACED — move to src/theme/ in Step 3.2
+└── vite-env.d.ts
+```
+
+### Consistency issues for upcoming phases
+
+**A. `apiClient` → `apiQuery` in spec code snippets** *(affects Phases 2–4)*  
+Several plan code examples still reference `apiClient` (the old name). The actual function is `apiQuery`. All such snippets below have been corrected in-place.
+
+**B. `DocumentFormField.tsx` and `RelationField.tsx` import `@/api` directly** *(Phase 2 concern)*  
+These components call `useDocumentSearch` (→ `useDocuments` → `apiQuery`). This is a dependency-flow violation (`components/` importing from `api/`). Phase 2, Step 2.1 moves them to `features/content/components/` where API imports are appropriate.
+
+**C. `helpers.ts` has two issues deferred to Phase 4**  
+1. `// @ts-ignore` on the `dayjs` import — causes `pnpm build` failure (Step 4.3)  
+2. `(item: any)` and `(rawVal as any).documentId` — violates no-any rule (Step 4.2)  
+Do **not** touch these during Phase 2 to keep the diff isolated.
+
+**D. `store/index.ts` barrel exports nothing** *(Phase 7 item)*  
+Should be updated to `export { useUIStore } from './uiStore';`. Deferred to Step 7.2.
+
+**E. `pages/index.ts` mixes named + default re-exports** — intentional, required for `React.lazy()`. No action needed.
+
+### Pre-Phase 2 cleanup applied (2026-07-15)
+
+- [x] Stale comment `React Query Hooks with API Fetching and Defensive Fallbacks` → `React Query Hooks` in `hooks.ts`
+- [x] Double blank lines between query hooks in `hooks.ts` removed
+- [x] `src/api/fallbacks.ts` deleted — dead file, content already in `__test_utils__/fixtures.ts`
 
 ---
 
@@ -187,7 +348,7 @@ src/
    - The page should only read route params and compose `DocumentForm`.
 
 6. **Create `src/features/content/services/documentApi.ts`**:
-   - Move the fetcher functions (just the `apiClient<T>(path)` calls) out of the query hooks.
+   - Move the fetcher functions (just the `apiQuery<T>(path)` calls) out of the query hooks.
    - The hooks in `src/features/content/hooks/` will import and wrap them.
 
 7. **Create `src/features/content/index.ts`**:
@@ -452,7 +613,10 @@ background: token.colorBgContainer
 
 **Estimated effort**: Medium — new test files.
 
-### Step 6.1 — Create shared test utilities
+### Step 6.1 — Create shared test utilities ✅ **DONE** (in Step 1.4)
+
+`src/__test_utils__/renderWithProviders.tsx` was created as part of Step 1.4 and is already
+adopted by `DocumentEditView.test.tsx`. The implementation matches the spec below.
 
 **File**: `src/__test_utils__/renderWithProviders.tsx`
 
@@ -490,7 +654,7 @@ Create test files for the following, prioritised by risk:
 
 | Priority | Test File | Covers |
 |---|---|---|
-| P0 | `src/api/client.test.ts` | `apiClient` success, error parsing, envelope unwrapping |
+| P0 | `src/api/client.test.ts` | `apiQuery`/`apiMutate` success, error parsing, envelope unwrapping |
 | P0 | `src/api/hooks.test.ts` | Query hooks return correct data, handle errors |
 | P1 | `src/features/content/components/DocumentForm.test.tsx` | Form rendering, submission payload shape |
 | P1 | `src/features/content/components/PublishButton.test.tsx` | Publish mutation trigger, loading state |
@@ -499,9 +663,10 @@ Create test files for the following, prioritised by risk:
 | P2 | `src/layout/DashboardLayout.test.tsx` | Sidebar rendering, collapse toggle |
 | P2 | `src/features/schemas/components/SchemaCard.test.tsx` | Attribute rendering |
 
-### Step 6.3 — Move test fixtures
+### Step 6.3 — Move test fixtures ✅ **DONE** (in Step 1.3)
 
-Move `src/api/fallbacks.ts` → `src/__test_utils__/fixtures.ts` and update all test imports.
+`src/api/fallbacks.ts` was moved to `src/__test_utils__/fixtures.ts` as part of Step 1.3.
+The original file has been deleted. All test imports already use `@/__test_utils__/fixtures`.
 
 ### Verification
 
@@ -519,7 +684,12 @@ Move `src/api/fallbacks.ts` → `src/__test_utils__/fixtures.ts` and update all 
 
 ### Step 7.1 — Remove retired `CreateDocumentDrawer` remnants
 
-After Phase 2, the `src/components/CreateDocumentDrawer/` directory should be completely empty. Delete it.
+After Phase 2, the `src/components/CreateDocumentDrawer/` directory will contain only
+its moved-out files' new paths. What remains after Step 2.1 is:
+- `CreateDocumentDrawer.tsx` — empty stub (delete immediately in Step 2.1)
+- `index.ts` — barrel (delete in Step 2.1)
+
+The directory itself should be deleted in Step 2.1 once all files are moved out.
 
 ### Step 7.2 — Ensure all barrel exports are consistent
 

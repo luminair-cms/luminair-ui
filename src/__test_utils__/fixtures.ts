@@ -1,4 +1,4 @@
-import { DocumentResponse, DetailedDocumentResponse, DocumentRecord } from './types';
+import { DocumentResponse, DetailedDocumentResponse, DocumentRecord } from '@/api/types';
 
 // Fallback Mock Data matching actual backend config/schema files
 
