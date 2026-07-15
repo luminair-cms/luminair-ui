@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, Tag, Space, Typography, Badge, Button } from 'antd';
+import { Table, Tag, Space, Typography, Badge } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { DetailedDocumentResponse, isRelationAttribute } from '@/features/schemas';
 import { DocumentRecord } from '../types';
@@ -74,23 +74,20 @@ export const DocumentTable: FC<DocumentTableProps> = ({ apiId, documents, schema
     },
   });
 
-  // Add standard Actions column
+  // Actions column — Publish only (row click handles navigation to edit)
   columns.push({
     title: 'Actions',
     key: 'actions',
-    width: 160,
+    width: 120,
     render: (_text: unknown, record: DocumentRecord) => {
       const docStatus = record.status || (record.publishedAt ? 'published' : 'draft');
       const showPublish = schema.options?.draftAndPublish && docStatus !== 'published';
 
-      return (
+      return showPublish ? (
         <Space>
-          <Button size="small" onClick={() => navigate(`/documents/${apiId}/${record.documentId}`)}>
-            Edit
-          </Button>
-          {showPublish && <PublishButton apiId={apiId} documentId={record.documentId} />}
+          <PublishButton apiId={apiId} documentId={record.documentId} />
         </Space>
-      );
+      ) : null;
     },
   });
 
@@ -103,6 +100,10 @@ export const DocumentTable: FC<DocumentTableProps> = ({ apiId, documents, schema
       scroll={{ x: 'max-content' }}
       pagination={{ pageSize: 10 }}
       style={{ background: 'transparent' }}
+      onRow={(record) => ({
+        onClick: () => navigate(`/documents/${apiId}/${record.documentId}`),
+        style: { cursor: 'pointer' },
+      })}
     />
   );
 };

@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Typography,
@@ -46,6 +46,9 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
 
   const isNew = documentId === 'new';
 
+  // Track whether the user has made any changes since the form was last loaded
+  const [isDirty, setIsDirty] = useState(false);
+
   const { data: schema, isLoading: schemaLoading } = useDetailedDocumentType(apiId);
   const { data: document, isLoading: documentLoading } = useDocument(apiId, documentId);
 
@@ -55,13 +58,15 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
 
   const localizations = useMemo(() => schema?.options?.localizations ?? [], [schema]);
 
-  // Load document values into form
+  // Load document values into form and reset dirty state
   useEffect(() => {
     if (document && schema && !isNew) {
       const initialValues = documentToFormValues(document, schema.attributes);
       form.setFieldsValue(initialValues);
+      setIsDirty(false);
     } else if (isNew) {
       form.resetFields();
+      setIsDirty(false);
     }
   }, [document, schema, isNew, form]);
 
@@ -111,6 +116,7 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
           {
             onSuccess: () => {
               message.success(`${schema.info.singularName} updated successfully!`);
+              setIsDirty(false);
             },
           },
         );
@@ -172,6 +178,9 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
 
   // Determine current status
   const documentStatus = document?.status || (document?.publishedAt ? 'published' : 'draft');
+
+  // Save Changes is disabled for existing records until the user makes a change
+  const isSaveDisabled = !isNew && !isDirty;
 
   return (
     <div style={{ width: '100%' }}>
@@ -244,6 +253,7 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
               type="primary"
               icon={<SaveOutlined />}
               loading={isNew ? createMutation.isPending : updateMutation.isPending}
+              disabled={isSaveDisabled}
               onClick={() => form.submit()}
             >
               {isNew ? 'Create' : 'Save Changes'}
@@ -267,7 +277,13 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
       )}
 
       <Card>
-        <Form form={form} layout="vertical" onFinish={onFinish} scrollToFirstError>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          onValuesChange={() => setIsDirty(true)}
+          scrollToFirstError
+        >
           {/* Field attributes */}
           {schema.attributes
             .filter((a) => !isRelationAttribute(a))
