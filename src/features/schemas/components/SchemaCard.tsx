@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { Card, Table, Tag, Space, Typography, Spin } from 'antd';
-import { Attribute, FieldAttribute, isRelationAttribute } from '../types';
+import { Attribute, FieldAttribute, isRelationAttribute, FieldConstraint } from '../types';
 import { useDetailedDocumentType } from '../hooks/useSchemas';
 import AttributeTypeTag from './AttributeTypeTag';
 import ConstraintTags from './ConstraintTags';
@@ -71,7 +71,7 @@ export const SchemaCard: FC<SchemaCardProps> = ({ id }) => {
       title: 'Constraints',
       dataIndex: 'constraints',
       key: 'constraints',
-      render: (constraints?: any[]) => <ConstraintTags constraints={constraints} />,
+      render: (constraints?: FieldConstraint[]) => <ConstraintTags constraints={constraints} />,
     },
   ];
 

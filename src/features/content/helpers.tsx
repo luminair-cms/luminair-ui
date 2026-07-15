@@ -1,6 +1,5 @@
 import type { Rule } from 'antd/es/form';
 import { Space, Tag, Typography } from 'antd';
-// @ts-ignore
 import dayjs from 'dayjs';
 import {
   FieldAttribute,
@@ -11,6 +10,11 @@ import {
 import { DocumentRecord } from './types';
 
 const { Text } = Typography;
+
+interface RelationItem {
+  documentId?: string | number;
+  [key: string]: unknown;
+}
 
 /** Convert a snake_case or kebab-case id to a human-readable Title Case label */
 export const toLabel = (id: string) =>
@@ -131,9 +135,9 @@ export const documentToFormValues = (
 
     if (isRelationAttribute(attr)) {
       if (Array.isArray(rawVal)) {
-        values[attr.id] = rawVal.map((item: any) => String(item.documentId || item));
+        values[attr.id] = rawVal.map((item: RelationItem) => String(item.documentId ?? item));
       } else if (typeof rawVal === 'object' && rawVal !== null) {
-        values[attr.id] = String((rawVal as any).documentId || rawVal);
+        values[attr.id] = String((rawVal as RelationItem).documentId ?? rawVal);
       } else {
         values[attr.id] = String(rawVal);
       }
