@@ -46,6 +46,7 @@ export const DocumentFormField: FC<DocumentFormFieldProps> = ({ attr, localizati
           items={localizations.map((locale) => ({
             key: locale,
             label: locale.toUpperCase(),
+            forceRender: true,
             children: (
               <Form.Item
                 name={[attr.id, locale]}

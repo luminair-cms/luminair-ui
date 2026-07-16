@@ -14,4 +14,5 @@ export {
 } from './hooks/useDocumentMutations';
 
 export { renderLocalizedCell } from './helpers';
+export { useDocumentStore } from './store/useDocumentStore';
 export * from './types';

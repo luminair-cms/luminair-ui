@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Typography,
@@ -16,6 +16,7 @@ import {
   theme,
 } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, CloudUploadOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import {
   useDetailedDocumentType,
   isRelationAttribute,
@@ -31,6 +32,7 @@ import {
 import { DocumentFormField } from './DocumentFormField';
 import { RelationField } from './RelationField';
 import { documentToFormValues, coerceValue, getTypeName } from '../helpers';
+import { useDocumentStore } from '../store/useDocumentStore';
 
 const { Title, Paragraph } = Typography;
 
@@ -46,9 +48,6 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
 
   const isNew = documentId === 'new';
 
-  // Track whether the user has made any changes since the form was last loaded
-  const [isDirty, setIsDirty] = useState(false);
-
   const { data: schema, isLoading: schemaLoading } = useDetailedDocumentType(apiId);
   const { data: document, isLoading: documentLoading } = useDocument(apiId, documentId);
 
@@ -58,17 +57,31 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
 
   const localizations = useMemo(() => schema?.options?.localizations ?? [], [schema]);
 
-  // Load document values into form and reset dirty state
+  // Zustand Store variables & actions
+  const initStore = useDocumentStore((state) => state.initStore);
+  const setFieldValue = useDocumentStore((state) => state.setFieldValue);
+  const setFieldValuePath = useDocumentStore((state) => state.setFieldValuePath);
+  const isDirty = useDocumentStore((state) => state.isDirty);
+  const resetStore = useDocumentStore((state) => state.reset);
+
+  // Load document values into form and reset/initialize Zustand store
   useEffect(() => {
     if (document && schema && !isNew) {
       const initialValues = documentToFormValues(document, schema.attributes);
       form.setFieldsValue(initialValues);
-      setIsDirty(false);
-    } else if (isNew) {
+      initStore(schema, document, false);
+    } else if (isNew && schema) {
       form.resetFields();
-      setIsDirty(false);
+      initStore(schema, null, true);
     }
-  }, [document, schema, isNew, form]);
+  }, [document, schema, isNew, form, initStore]);
+
+  // Clean up store on unmount
+  useEffect(() => {
+    return () => {
+      resetStore();
+    };
+  }, [resetStore]);
 
   const onFinish = useCallback(
     (values: Record<string, unknown>) => {
@@ -116,13 +129,18 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
           {
             onSuccess: () => {
               message.success(`${schema.info.singularName} updated successfully!`);
-              setIsDirty(false);
+              // Re-initialize store with the updated values
+              if (document) {
+                // Merge new values into document record mock to sync initialValues
+                const updatedRecord = { ...document, ...data };
+                initStore(schema, updatedRecord, false);
+              }
             },
           },
         );
       }
     },
-    [schema, isNew, createMutation, updateMutation, apiId, navigate],
+    [schema, isNew, createMutation, updateMutation, apiId, navigate, document, initStore],
   );
 
   const handlePublish = useCallback(() => {
@@ -281,7 +299,24 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
           form={form}
           layout="vertical"
           onFinish={onFinish}
-          onValuesChange={() => setIsDirty(true)}
+          onValuesChange={(changedValues) => {
+            // Update Zustand store with the changed values
+            Object.entries(changedValues).forEach(([key, val]) => {
+              if (
+                typeof val === 'object' &&
+                val !== null &&
+                !Array.isArray(val) &&
+                !dayjs.isDayjs(val)
+              ) {
+                // If it is a nested change, e.g. { name: { en: "hello" } }
+                Object.entries(val).forEach(([subKey, subVal]) => {
+                  setFieldValuePath([key, subKey], subVal);
+                });
+              } else {
+                setFieldValue(key, val);
+              }
+            });
+          }}
           scrollToFirstError
         >
           {/* Field attributes */}
