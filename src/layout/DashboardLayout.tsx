@@ -415,12 +415,10 @@ export const DashboardLayout: FC = () => {
         <Content
           style={{
             margin: 24,
-            padding: 24,
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
+            padding: 0,
+            background: 'transparent',
             minHeight: 280,
             overflow: 'auto',
-            transition: 'background 0.2s',
           }}
         >
           <ErrorBoundary type="content">
