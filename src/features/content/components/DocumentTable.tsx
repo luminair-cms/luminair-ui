@@ -1,14 +1,87 @@
 import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, Tag, Space, Typography, Badge, Popover, Button } from 'antd';
+import { Table, Tag, Space, Typography, Badge, Popover, Button, Popconfirm, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { MoreOutlined } from '@ant-design/icons';
+import { MoreOutlined, DeleteOutlined } from '@ant-design/icons';
 import { DetailedDocumentResponse, isRelationAttribute } from '@/features/schemas';
 import { DocumentRecord } from '../types';
 import { renderLocalizedCell, sortAttributesByDefaultOrder, toLabel, getRecordFieldValue } from '../helpers';
 import PublishButton from './PublishButton';
+import { useDeleteDocument } from '../hooks/useDocumentMutations';
 
 const { Text } = Typography;
+
+interface DocumentRowActionsProps {
+  apiId: string;
+  record: DocumentRecord;
+  schema: DetailedDocumentResponse;
+}
+
+const DocumentRowActions: FC<DocumentRowActionsProps> = ({ apiId, record, schema }) => {
+  const deleteMutation = useDeleteDocument(apiId);
+  const docStatus = record.status || (record.publishedAt ? 'published' : 'draft');
+  const showPublish = schema.options?.draftAndPublish && docStatus !== 'published';
+
+  const handleDelete = () => {
+    deleteMutation.mutate(record.documentId, {
+      onSuccess: () => {
+        message.success('Document deleted successfully!');
+      },
+      onError: (err) => {
+        message.error(`Delete failed: ${err.detail || err.title || 'Unknown error'}`);
+      },
+    });
+  };
+
+  const popoverContent = (
+    <Space direction="vertical" size={10} style={{ padding: '4px 2px', minWidth: 140 }} onClick={(e) => e.stopPropagation()}>
+      <div>
+        <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 2 }}>
+          Document ID
+        </Text>
+        <Text copyable code style={{ fontSize: 12 }}>
+          {record.documentId}
+        </Text>
+      </div>
+
+      {showPublish && (
+        <PublishButton apiId={apiId} documentId={record.documentId} />
+      )}
+
+      <Popconfirm
+        title="Delete document"
+        description="Are you sure you want to delete this document?"
+        onConfirm={handleDelete}
+        okText="Delete"
+        okButtonProps={{ danger: true, loading: deleteMutation.isPending }}
+        cancelText="Cancel"
+      >
+        <Button
+          danger
+          size="small"
+          icon={<DeleteOutlined />}
+          style={{ width: '100%' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          Delete
+        </Button>
+      </Popconfirm>
+    </Space>
+  );
+
+  return (
+    <div onClick={(e) => e.stopPropagation()}>
+      <Popover content={popoverContent} trigger="hover" placement="left">
+        <Button
+          type="text"
+          size="small"
+          icon={<MoreOutlined style={{ fontSize: 18 }} />}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </Popover>
+    </div>
+  );
+};
 
 export interface DocumentTableProps {
   apiId: string;
@@ -72,39 +145,9 @@ export const DocumentTable: FC<DocumentTableProps> = ({ apiId, documents, schema
     key: 'actions',
     width: 60,
     align: 'center',
-    render: (_text: unknown, record: DocumentRecord) => {
-      const docStatus = record.status || (record.publishedAt ? 'published' : 'draft');
-      const showPublish = schema.options?.draftAndPublish && docStatus !== 'published';
-
-      const popoverContent = (
-        <Space direction="vertical" size={8} style={{ padding: '4px 2px' }} onClick={(e) => e.stopPropagation()}>
-          <div>
-            <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 2 }}>
-              Document ID
-            </Text>
-            <Text copyable code style={{ fontSize: 12 }}>
-              {record.documentId}
-            </Text>
-          </div>
-          {showPublish && (
-            <PublishButton apiId={apiId} documentId={record.documentId} />
-          )}
-        </Space>
-      );
-
-      return (
-        <div onClick={(e) => e.stopPropagation()}>
-          <Popover content={popoverContent} trigger="hover" placement="left">
-            <Button
-              type="text"
-              size="small"
-              icon={<MoreOutlined style={{ fontSize: 18 }} />}
-              onClick={(e) => e.stopPropagation()}
-            />
-          </Popover>
-        </div>
-      );
-    },
+    render: (_text: unknown, record: DocumentRecord) => (
+      <DocumentRowActions apiId={apiId} record={record} schema={schema} />
+    ),
   });
 
   return (

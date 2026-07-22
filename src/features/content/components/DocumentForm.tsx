@@ -13,9 +13,10 @@ import {
   Alert,
   message,
   Divider,
+  Popconfirm,
   theme,
 } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CloudUploadOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, SaveOutlined, CloudUploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import {
   useDetailedDocumentType,
@@ -28,6 +29,7 @@ import {
   useCreateDocument,
   useUpdateDocument,
   usePublishDocument,
+  useDeleteDocument,
 } from '../hooks/useDocumentMutations';
 import { DocumentFormField } from './DocumentFormField';
 import { RelationField } from './RelationField';
@@ -61,6 +63,20 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
   const createMutation = useCreateDocument(apiId);
   const updateMutation = useUpdateDocument(apiId, documentId);
   const publishMutation = usePublishDocument(apiId, documentId);
+  const deleteMutation = useDeleteDocument(apiId, documentId);
+
+  const handleDelete = useCallback(() => {
+    if (!schema || !documentId) return;
+    deleteMutation.mutate(undefined, {
+      onSuccess: () => {
+        message.success(`${schema.info.singularName} deleted successfully!`);
+        navigate(`/documents/${apiId}`);
+      },
+      onError: (err) => {
+        message.error(`Delete failed: ${err.detail || err.title || 'Unknown error'}`);
+      },
+    });
+  }, [schema, documentId, deleteMutation, navigate, apiId]);
 
   const localizations = useMemo(() => schema?.options?.localizations ?? [], [schema]);
   const sortedAttributes = useMemo(
@@ -279,6 +295,20 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
             <Link to={`/documents/${apiId}`}>
               <Button icon={<ArrowLeftOutlined />}>Back</Button>
             </Link>
+            {!isNew && (
+              <Popconfirm
+                title="Delete document"
+                description="Are you sure you want to delete this document? This action cannot be undone."
+                onConfirm={handleDelete}
+                okText="Delete"
+                okButtonProps={{ danger: true, loading: deleteMutation.isPending }}
+                cancelText="Cancel"
+              >
+                <Button danger icon={<DeleteOutlined />}>
+                  Delete
+                </Button>
+              </Popconfirm>
+            )}
             {!isNew && schema.options?.draftAndPublish && (
               <Button
                 type="default"

@@ -59,3 +59,22 @@ export const usePublishDocument = (apiId: string | undefined, documentId: string
     },
   });
 };
+
+/**
+ * Mutation hook for deleting a document instance.
+ */
+export const useDeleteDocument = (apiId: string | undefined, documentId?: string | undefined) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, ProblemDetails, string | void>({
+    mutationFn: async (targetId) => {
+      const docId = targetId || documentId;
+      if (!apiId || !docId) throw new Error('apiId and documentId are required to delete');
+      await documentApi.deleteDocument(apiId, docId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['document'] });
+    },
+  });
+};

@@ -39,4 +39,11 @@ export const documentApi = {
     documentId: string,
   ): Promise<{ data: DocumentRecord; headers: Headers }> =>
     apiMutate<DocumentRecord>(`/api/documents/${apiId}/${documentId}/publish`, 'POST'),
+
+  /** Delete a document instance */
+  deleteDocument: (
+    apiId: string,
+    documentId: string,
+  ): Promise<{ data: void; headers: Headers }> =>
+    apiMutate<void>(`/api/documents/${apiId}/${documentId}`, 'DELETE'),
 };

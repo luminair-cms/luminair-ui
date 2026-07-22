@@ -89,6 +89,13 @@ export function mockApiClient() {
         }
         return Promise.resolve({ data: doc ?? payload.data, headers: new Headers() });
       }
+      if (docMatch && method === 'DELETE') {
+        const [, apiId, documentId] = docMatch;
+        if (fallbackDocuments[apiId]) {
+          fallbackDocuments[apiId] = fallbackDocuments[apiId].filter((d) => d.documentId !== documentId);
+        }
+        return Promise.resolve({ data: null, headers: new Headers() });
+      }
       return Promise.resolve({ data: null, headers: new Headers() });
     }),
   }));
