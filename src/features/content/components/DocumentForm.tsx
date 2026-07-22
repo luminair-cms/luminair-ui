@@ -37,6 +37,7 @@ import {
   getTypeName,
   sortAttributesByDefaultOrder,
   getPrimaryFieldValue,
+  snakeToCamel,
 } from '../helpers';
 import { useDocumentStore } from '../store/useDocumentStore';
 
@@ -105,9 +106,20 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
           if (!isOwning) continue;
 
           const val = values[attr.id];
-          if (val !== undefined && val !== null) {
-            const ids = Array.isArray(val) ? val : [val];
-            data[attr.id] = { connect: ids };
+          const initialVal = initialValues[attr.id];
+
+          // For existing documents, skip relation payloads if relation was unchanged
+          if (!isNew && String(val ?? '') === String(initialVal ?? '')) {
+            continue;
+          }
+
+          if (val !== undefined && val !== null && val !== '') {
+            const ids = Array.isArray(val) ? val.filter(Boolean) : [val];
+            if (ids.length > 0) {
+              data[attr.id] = { connect: ids };
+            } else {
+              data[attr.id] = { disconnect: [] };
+            }
           } else {
             data[attr.id] = { disconnect: [] }; // disconnect all if cleared
           }
@@ -141,8 +153,11 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
               message.success(`${schema.info.singularName} updated successfully!`);
               // Re-initialize store with the updated values
               if (document) {
-                // Merge new values into document record mock to sync initialValues
                 const updatedRecord = { ...document, ...data };
+                for (const [k, v] of Object.entries(data)) {
+                  updatedRecord[k] = v;
+                  updatedRecord[snakeToCamel(k)] = v;
+                }
                 initStore(schema, updatedRecord, false);
               }
             },

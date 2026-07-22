@@ -5,7 +5,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { MoreOutlined } from '@ant-design/icons';
 import { DetailedDocumentResponse, isRelationAttribute } from '@/features/schemas';
 import { DocumentRecord } from '../types';
-import { renderLocalizedCell, sortAttributesByDefaultOrder } from '../helpers';
+import { renderLocalizedCell, sortAttributesByDefaultOrder, toLabel, getRecordFieldValue } from '../helpers';
 import PublishButton from './PublishButton';
 
 const { Text } = Typography;
@@ -35,11 +35,13 @@ export const DocumentTable: FC<DocumentTableProps> = ({ apiId, documents, schema
       });
     } else {
       columns.push({
-        title: attr.id.charAt(0).toUpperCase() + attr.id.slice(1),
-        dataIndex: attr.id,
+        title: toLabel(attr.id),
         key: attr.id,
         width: 200,
-        render: (val: unknown) => renderLocalizedCell(val),
+        render: (_val: unknown, record: DocumentRecord) => {
+          const rawVal = getRecordFieldValue(record, attr.id);
+          return renderLocalizedCell(rawVal);
+        },
       });
     }
   });

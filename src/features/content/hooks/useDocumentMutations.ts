@@ -35,8 +35,8 @@ export const useUpdateDocument = (apiId: string | undefined, documentId: string 
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents', apiId] });
-      queryClient.invalidateQueries({ queryKey: ['document', apiId, documentId] });
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['document'] });
     },
   });
 };

@@ -74,6 +74,22 @@ export function mockApiClient() {
       }
       return Promise.resolve(null);
     }),
-    apiMutate: vi.fn(),
+    apiMutate: vi.fn((path: string, method: string, payload?: any) => {
+      const docMatch = path.match(/^\/api\/documents\/([^/]+)\/([^/?]+)$/);
+      if (docMatch && method === 'PUT' && payload?.data) {
+        const [, apiId, documentId] = docMatch;
+        const docs = fallbackDocuments[apiId] ?? [];
+        const doc = docs.find((d) => d.documentId === documentId);
+        if (doc) {
+          for (const [k, v] of Object.entries(payload.data)) {
+            doc[k] = v;
+            const camelKey = k.replace(/[-_]([a-z])/g, (_, l) => l.toUpperCase());
+            doc[camelKey] = v;
+          }
+        }
+        return Promise.resolve({ data: doc ?? payload.data, headers: new Headers() });
+      }
+      return Promise.resolve({ data: null, headers: new Headers() });
+    }),
   }));
 }

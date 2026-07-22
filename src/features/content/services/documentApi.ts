@@ -8,11 +8,11 @@ import { DocumentRecord, CreateDocumentPayload } from '../types';
 export const documentApi = {
   /** Fetch list of documents for a given content type */
   fetchDocuments: (apiId: string): Promise<DocumentRecord[]> =>
-    apiQuery<DocumentRecord[]>(`/api/documents/${apiId}?status=draft`),
+    apiQuery<DocumentRecord[]>(`/api/documents/${apiId}?status=draft&populate=*`),
 
-  /** Fetch a single document instance by ID (draft status) */
+  /** Fetch a single document instance by ID (draft status with populated relations) */
   fetchDocument: (apiId: string, documentId: string): Promise<DocumentRecord> =>
-    apiQuery<DocumentRecord>(`/api/documents/${apiId}/${documentId}?status=draft`),
+    apiQuery<DocumentRecord>(`/api/documents/${apiId}/${documentId}?status=draft&populate=*`),
 
   /** Create a new document instance (returns 201 Created with Location header) */
   createDocument: (

@@ -143,6 +143,24 @@ describe('content helpers', () => {
       expect(result.age).toBe(30);
       expect(result.json_field).toContain('"key": "value"');
     });
+
+    it('extracts scalar string ID for hasOne relation attribute', () => {
+      const mockAttributes: Attribute[] = [
+        { id: 'category', relation: 'hasOne', target: 'partner-categories' },
+      ];
+      const mockRecord: DocumentRecord = {
+        id: 1,
+        documentId: 'p-uuid-1',
+        status: 'draft',
+        createdAt: '',
+        updatedAt: '',
+        publishedAt: null,
+        category: [{ documentId: 'pc-uuid-1', name: 'Retail' }],
+      };
+
+      const result = documentToFormValues(mockRecord, mockAttributes);
+      expect(result.category).toBe('pc-uuid-1');
+    });
   });
 
   describe('renderLocalizedCell', () => {

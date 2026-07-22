@@ -129,6 +129,25 @@ export const formatFieldValue = (val: unknown): string | undefined => {
   return String(val);
 };
 
+/** Converts snake_case or kebab-case to camelCase (e.g. legal_entity -> legalEntity) */
+export const snakeToCamel = (str: string): string =>
+  str.replace(/[-_]([a-z])/g, (_, letter) => letter.toUpperCase());
+
+/** Retrieves field value from record attempting exact key, camelCase, or snake_case key */
+export const getRecordFieldValue = (
+  record: DocumentRecord | Record<string, unknown> | null | undefined,
+  attrId: string,
+): unknown => {
+  if (!record) return undefined;
+  const camelKey = snakeToCamel(attrId);
+  const valDirect = record[attrId];
+  const valCamel = record[camelKey];
+
+  if (valDirect !== undefined && valDirect !== null) return valDirect;
+  if (valCamel !== undefined && valCamel !== null) return valCamel;
+  return undefined;
+};
+
 /**
  * Extract the primary field value of a DocumentRecord according to model sorting rules.
  */
@@ -141,7 +160,7 @@ export const getPrimaryFieldValue = (
   if (attributes && attributes.length > 0) {
     const primaryAttr = getPrimaryAttribute(attributes);
     if (primaryAttr) {
-      const rawVal = doc[primaryAttr.id];
+      const rawVal = getRecordFieldValue(doc, primaryAttr.id);
       const formatted = formatFieldValue(rawVal);
       if (formatted) return formatted;
     }
@@ -161,22 +180,22 @@ export const getPrimaryFieldValue = (
 };
 
 /**
- * Get display label for a DocumentRecord in a relation Select option.
- * Uses the primary field according to model sorting rules, falling back to documentId.
+ * Formats a document record for relation select dropdown display.
+ * Format: "<PrimaryFieldValue> (<shortDocumentId>…)"
  */
 export const getDocumentLabel = (
-  doc: DocumentRecord,
+  doc: DocumentRecord | null | undefined,
   schemaOrAttributes?: Attribute[] | DetailedDocumentResponse | null,
 ): string => {
+  if (!doc) return '';
   const attributes = Array.isArray(schemaOrAttributes)
     ? schemaOrAttributes
     : schemaOrAttributes?.attributes;
+  const primaryVal = getPrimaryFieldValue(doc, attributes);
+  const shortId = doc.documentId ? `${String(doc.documentId).slice(0, 8)}…` : '';
 
-  const primaryValue = getPrimaryFieldValue(doc, attributes);
-
-  if (primaryValue) {
-    const shortId = String(doc.documentId).substring(0, 8);
-    return `${primaryValue} (${shortId}…)`;
+  if (primaryVal) {
+    return shortId ? `${primaryVal} (${shortId})` : primaryVal;
   }
   return String(doc.documentId);
 };
@@ -191,12 +210,18 @@ export const documentToFormValues = (
   const values: Record<string, unknown> = {};
 
   for (const attr of attributes) {
-    const rawVal = record[attr.id];
+    const rawVal = getRecordFieldValue(record, attr.id);
     if (rawVal === undefined || rawVal === null) continue;
 
     if (isRelationAttribute(attr)) {
+      const isSingleRelation = attr.relation === 'hasOne' || attr.relation === 'belongsToOne';
       if (Array.isArray(rawVal)) {
-        values[attr.id] = rawVal.map((item: RelationItem) => String(item.documentId ?? item));
+        if (isSingleRelation) {
+          const first = rawVal[0];
+          values[attr.id] = first ? String((first as RelationItem).documentId ?? first) : undefined;
+        } else {
+          values[attr.id] = rawVal.map((item: RelationItem) => String(item.documentId ?? item));
+        }
       } else if (typeof rawVal === 'object' && rawVal !== null) {
         values[attr.id] = String((rawVal as RelationItem).documentId ?? rawVal);
       } else {
