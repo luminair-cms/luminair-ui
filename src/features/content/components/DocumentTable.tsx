@@ -1,13 +1,12 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, Tag, Space, Typography, Badge, Popover, Button, Popconfirm, message } from 'antd';
+import { Table, Tag, Typography, Badge, Popover, Button, Popconfirm, message, Divider, Tooltip, theme } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { MoreOutlined, DeleteOutlined } from '@ant-design/icons';
+import { MoreOutlined, DeleteOutlined, EditOutlined, CloudUploadOutlined, CopyOutlined, CheckOutlined } from '@ant-design/icons';
 import { DetailedDocumentResponse, isRelationAttribute } from '@/features/schemas';
 import { DocumentRecord } from '../types';
 import { renderLocalizedCell, sortAttributesByDefaultOrder, toLabel, getRecordFieldValue } from '../helpers';
-import PublishButton from './PublishButton';
-import { useDeleteDocument } from '../hooks/useDocumentMutations';
+import { useDeleteDocument, usePublishDocument } from '../hooks/useDocumentMutations';
 
 const { Text } = Typography;
 
@@ -18,14 +17,49 @@ interface DocumentRowActionsProps {
 }
 
 const DocumentRowActions: FC<DocumentRowActionsProps> = ({ apiId, record, schema }) => {
+  const navigate = useNavigate();
+  const { token } = theme.useToken();
+  const [copied, setCopied] = useState(false);
+  const [open, setOpen] = useState(false);
+
   const deleteMutation = useDeleteDocument(apiId);
+  const publishMutation = usePublishDocument(apiId, record.documentId);
+
   const docStatus = record.status || (record.publishedAt ? 'published' : 'draft');
   const showPublish = schema.options?.draftAndPublish && docStatus !== 'published';
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(record.documentId);
+    setCopied(true);
+    message.success('Document ID copied to clipboard');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpen(false);
+    navigate(`/documents/${apiId}/${record.documentId}`);
+  };
+
+  const handlePublish = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    publishMutation.mutate(undefined, {
+      onSuccess: () => {
+        message.success('Document published successfully!');
+        setOpen(false);
+      },
+      onError: (err) => {
+        message.error(`Publish failed: ${err.detail || err.title || 'Unknown error'}`);
+      },
+    });
+  };
 
   const handleDelete = () => {
     deleteMutation.mutate(record.documentId, {
       onSuccess: () => {
         message.success('Document deleted successfully!');
+        setOpen(false);
       },
       onError: (err) => {
         message.error(`Delete failed: ${err.detail || err.title || 'Unknown error'}`);
@@ -34,44 +68,138 @@ const DocumentRowActions: FC<DocumentRowActionsProps> = ({ apiId, record, schema
   };
 
   const popoverContent = (
-    <Space direction="vertical" size={10} style={{ padding: '4px 2px', minWidth: 140 }} onClick={(e) => e.stopPropagation()}>
-      <div>
-        <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 2 }}>
+    <div style={{ width: 220, padding: 4 }} onClick={(e) => e.stopPropagation()}>
+      {/* Document ID section with copy feedback */}
+      <div style={{ padding: '4px 8px 8px 8px' }}>
+        <Text
+          type="secondary"
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.6px',
+            textTransform: 'uppercase',
+            display: 'block',
+            marginBottom: 6,
+          }}
+        >
           Document ID
         </Text>
-        <Text copyable code style={{ fontSize: 12 }}>
-          {record.documentId}
-        </Text>
+        <div
+          onClick={handleCopy}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: token.colorFillAlter,
+            border: `1px solid ${token.colorBorderSecondary}`,
+            borderRadius: token.borderRadiusSM,
+            padding: '4px 8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+        >
+          <Text
+            ellipsis
+            code
+            style={{
+              fontSize: 11,
+              margin: 0,
+              background: 'transparent',
+              border: 'none',
+              color: token.colorText,
+              maxWidth: 160,
+            }}
+          >
+            {record.documentId}
+          </Text>
+          <Tooltip title={copied ? 'Copied!' : 'Copy ID'}>
+            {copied ? (
+              <CheckOutlined style={{ fontSize: 12, color: token.colorSuccess }} />
+            ) : (
+              <CopyOutlined style={{ fontSize: 12, color: token.colorTextDescription }} />
+            )}
+          </Tooltip>
+        </div>
       </div>
 
-      {showPublish && (
-        <PublishButton apiId={apiId} documentId={record.documentId} />
-      )}
+      <Divider style={{ margin: '4px 0' }} />
 
-      <Popconfirm
-        title="Delete document"
-        description="Are you sure you want to delete this document?"
-        onConfirm={handleDelete}
-        okText="Delete"
-        okButtonProps={{ danger: true, loading: deleteMutation.isPending }}
-        cancelText="Cancel"
-      >
+      {/* Menu Actions */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Button
-          danger
-          size="small"
-          icon={<DeleteOutlined />}
-          style={{ width: '100%' }}
-          onClick={(e) => e.stopPropagation()}
+          type="text"
+          block
+          icon={<EditOutlined />}
+          onClick={handleEdit}
+          style={{
+            textAlign: 'left',
+            justifyContent: 'flex-start',
+            height: 34,
+            fontSize: 13,
+          }}
         >
-          Delete
+          Edit Entry
         </Button>
-      </Popconfirm>
-    </Space>
+
+        {showPublish && (
+          <Button
+            type="text"
+            block
+            icon={<CloudUploadOutlined style={{ color: token.colorSuccess }} />}
+            loading={publishMutation.isPending}
+            onClick={handlePublish}
+            style={{
+              textAlign: 'left',
+              justifyContent: 'flex-start',
+              height: 34,
+              fontSize: 13,
+              color: token.colorSuccess,
+            }}
+          >
+            Publish Draft
+          </Button>
+        )}
+
+        <Divider style={{ margin: '4px 0' }} />
+
+        <Popconfirm
+          title="Delete document"
+          description="Are you sure you want to delete this document?"
+          onConfirm={handleDelete}
+          okText="Delete"
+          okButtonProps={{ danger: true, loading: deleteMutation.isPending }}
+          cancelText="Cancel"
+        >
+          <Button
+            danger
+            type="text"
+            block
+            icon={<DeleteOutlined />}
+            style={{
+              textAlign: 'left',
+              justifyContent: 'flex-start',
+              height: 34,
+              fontSize: 13,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            Delete Entry
+          </Button>
+        </Popconfirm>
+      </div>
+    </div>
   );
 
   return (
     <div onClick={(e) => e.stopPropagation()}>
-      <Popover content={popoverContent} trigger="hover" placement="left">
+      <Popover
+        content={popoverContent}
+        trigger="hover"
+        placement="left"
+        open={open}
+        onOpenChange={setOpen}
+        overlayInnerStyle={{ padding: 6, borderRadius: token.borderRadiusLG }}
+      >
         <Button
           type="text"
           size="small"
