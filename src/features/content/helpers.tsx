@@ -5,6 +5,7 @@ import {
   FieldAttribute,
   FieldConstraint,
   Attribute,
+  DetailedDocumentResponse,
   isRelationAttribute,
 } from '@/features/schemas';
 import { DocumentRecord } from './types';
@@ -102,18 +103,80 @@ export const coerceValue = (typeName: string, val: unknown): unknown => {
 };
 
 /**
- * Get display label for a DocumentRecord in a relation Select option.
- * Attempts common display fields (name, title, uid) before falling back to documentId.
+ * Returns the primary attribute based on model sorting rules:
+ * 1. Field with 'uid' type (if exists)
+ * 2. Field named 'name' (if exists)
+ * 3. First unique attribute (if neither 1 nor 2 exists)
+ * 4. First available attribute as fallback
  */
-export const getDocumentLabel = (doc: DocumentRecord): string => {
-  const display =
-    (typeof doc.name === 'string' && doc.name) ||
-    (typeof doc.title === 'string' && doc.title) ||
-    (typeof doc.uid === 'string' && doc.uid);
+export const getPrimaryAttribute = (attributes?: Attribute[]): Attribute | undefined => {
+  if (!attributes || attributes.length === 0) return undefined;
+  const sorted = sortAttributesByDefaultOrder(attributes);
+  return sorted[0];
+};
 
-  if (display) {
+/**
+ * Formats a field value as string (handling localized objects, numbers, and strings).
+ */
+export const formatFieldValue = (val: unknown): string | undefined => {
+  if (val === undefined || val === null || val === '') return undefined;
+  if (typeof val === 'object' && !Array.isArray(val)) {
+    const entries = Object.entries(val);
+    if (entries.length === 0) return undefined;
+    const nonFirst = entries.find(([, text]) => text && String(text).trim().length > 0);
+    return nonFirst ? String(nonFirst[1]) : String(entries[0][1]);
+  }
+  return String(val);
+};
+
+/**
+ * Extract the primary field value of a DocumentRecord according to model sorting rules.
+ */
+export const getPrimaryFieldValue = (
+  doc: DocumentRecord | null | undefined,
+  attributes?: Attribute[],
+): string | undefined => {
+  if (!doc) return undefined;
+
+  if (attributes && attributes.length > 0) {
+    const primaryAttr = getPrimaryAttribute(attributes);
+    if (primaryAttr) {
+      const rawVal = doc[primaryAttr.id];
+      const formatted = formatFieldValue(rawVal);
+      if (formatted) return formatted;
+    }
+  }
+
+  // Fallback to checking common display properties if attributes not supplied or primary value empty
+  const nameVal = formatFieldValue(doc.name);
+  if (nameVal) return nameVal;
+
+  const titleVal = formatFieldValue(doc.title);
+  if (titleVal) return titleVal;
+
+  const uidVal = formatFieldValue(doc.uid);
+  if (uidVal) return uidVal;
+
+  return undefined;
+};
+
+/**
+ * Get display label for a DocumentRecord in a relation Select option.
+ * Uses the primary field according to model sorting rules, falling back to documentId.
+ */
+export const getDocumentLabel = (
+  doc: DocumentRecord,
+  schemaOrAttributes?: Attribute[] | DetailedDocumentResponse | null,
+): string => {
+  const attributes = Array.isArray(schemaOrAttributes)
+    ? schemaOrAttributes
+    : schemaOrAttributes?.attributes;
+
+  const primaryValue = getPrimaryFieldValue(doc, attributes);
+
+  if (primaryValue) {
     const shortId = String(doc.documentId).substring(0, 8);
-    return `${display} (${shortId}…)`;
+    return `${primaryValue} (${shortId}…)`;
   }
   return String(doc.documentId);
 };
@@ -158,7 +221,7 @@ export const renderLocalizedCell = (val: unknown) => {
   if (!val) return <Text type="secondary">—</Text>;
   if (typeof val === 'object' && !Array.isArray(val)) {
     return (
-      <Space size={[4, 4]} wrap>
+      <Space size={[4, 4]} direction="vertical" align="start" style={{ display: 'flex' }}>
         {Object.entries(val).map(([locale, text]) => (
           <Tag
             key={locale}
@@ -167,6 +230,8 @@ export const renderLocalizedCell = (val: unknown) => {
               fontSize: 11,
               background: 'var(--antd-color-bg-container)',
               border: '1px solid var(--antd-color-border-secondary)',
+              whiteSpace: 'normal',
+              wordBreak: 'break-word',
             }}
           >
             <span
@@ -187,3 +252,41 @@ export const renderLocalizedCell = (val: unknown) => {
   }
   return <Text>{String(val)}</Text>;
 };
+
+/**
+ * Sorts schema attributes according to implicit default ordering:
+ * 1. First, field with Uid type (if exists)
+ * 2. Second, field named 'name' (if exists)
+ * 3. If neither Uid type nor name field exists, place the first unique attribute first.
+ * Remaining attributes maintain their original relative order.
+ */
+export const sortAttributesByDefaultOrder = (attributes: Attribute[]): Attribute[] => {
+  const attrs = [...attributes];
+
+  const uidAttr = attrs.find(
+    (attr) => !isRelationAttribute(attr) && getTypeName(attr.type).toLowerCase() === 'uid',
+  );
+  const nameAttr = attrs.find((attr) => attr.id.toLowerCase() === 'name');
+
+  const priorityAttrs: Attribute[] = [];
+
+  if (uidAttr) {
+    priorityAttrs.push(uidAttr);
+  }
+  if (nameAttr && nameAttr !== uidAttr) {
+    priorityAttrs.push(nameAttr);
+  }
+
+  if (!uidAttr && !nameAttr) {
+    const uniqueAttr = attrs.find((attr) => !isRelationAttribute(attr) && attr.unique);
+    if (uniqueAttr) {
+      priorityAttrs.push(uniqueAttr);
+    }
+  }
+
+  const prioritySet = new Set(priorityAttrs);
+  const remainingAttrs = attrs.filter((attr) => !prioritySet.has(attr));
+
+  return [...priorityAttrs, ...remainingAttrs];
+};
+

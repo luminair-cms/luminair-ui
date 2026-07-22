@@ -63,8 +63,8 @@ describe('DocumentEditView Page', () => {
       expect(screen.queryByText(/loading document details.../i)).not.toBeInTheDocument();
     });
 
-    // Verify correct page titles/subtexts
-    expect(screen.getByRole('heading', { name: /edit brand/i })).toBeInTheDocument();
+    // Verify correct page titles/subtexts (header uses primary field value according to model ordering)
+    expect(screen.getByRole('heading', { name: /apple/i })).toBeInTheDocument();
     expect(screen.getByText(/document id: b1-uuid-1/i)).toBeInTheDocument();
 
     // Verify fields rendered and populated

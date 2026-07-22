@@ -13,6 +13,13 @@ export {
   usePublishDocument,
 } from './hooks/useDocumentMutations';
 
-export { renderLocalizedCell } from './helpers';
+export {
+  renderLocalizedCell,
+  sortAttributesByDefaultOrder,
+  getPrimaryAttribute,
+  getPrimaryFieldValue,
+  getDocumentLabel,
+  formatFieldValue,
+} from './helpers';
 export { useDocumentStore } from './store/useDocumentStore';
 export * from './types';

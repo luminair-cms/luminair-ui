@@ -1,12 +1,12 @@
 import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Typography, Button, Spin, Empty, Card } from 'antd';
+import { Typography, Button, Spin, Empty, Card, Popover } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useDetailedDocumentType } from '@/features/schemas';
 import { useDocuments } from '../hooks/useDocuments';
 import { DocumentTable } from './DocumentTable';
 
-const { Title, Paragraph } = Typography;
+const { Title } = Typography;
 
 export interface DocumentListProps {
   apiId: string | undefined;
@@ -29,21 +29,30 @@ export const DocumentList: FC<DocumentListProps> = ({ apiId }) => {
     return <Empty description={`Content type '${apiId}' schema not found.`} />;
   }
 
+  const description = schema.info.description || 'Manage dynamic database entries.';
+
   return (
     <div style={{ width: '100%' }}>
-      <div className="page-header">
-        <Typography>
-          <Title level={2}>{schema.title}</Title>
-          <Paragraph type="secondary">
-            {schema.info.description || 'Manage dynamic database entries.'}
-          </Paragraph>
-        </Typography>
+      <div
+        className="page-header"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 24,
+        }}
+      >
+        <Popover content={description} trigger="hover">
+          <Title level={2} style={{ margin: 0, cursor: 'pointer', display: 'inline-block' }}>
+            {schema.title}
+          </Title>
+        </Popover>
         <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => navigate(`/documents/${apiId}/new`)}
         >
-          Create New {schema.info.singularName}
+          Create New
         </Button>
       </div>
 

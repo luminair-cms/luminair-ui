@@ -6,6 +6,11 @@ import {
   constraintToRule,
   coerceValue,
   documentToFormValues,
+  renderLocalizedCell,
+  sortAttributesByDefaultOrder,
+  getPrimaryAttribute,
+  getPrimaryFieldValue,
+  getDocumentLabel,
 } from './helpers';
 import { Attribute } from '@/features/schemas';
 import { DocumentRecord } from './types';
@@ -137,6 +142,102 @@ describe('content helpers', () => {
       expect(result.name).toBe('John Doe');
       expect(result.age).toBe(30);
       expect(result.json_field).toContain('"key": "value"');
+    });
+  });
+
+  describe('renderLocalizedCell', () => {
+    it('returns dash for empty values', () => {
+      const res = renderLocalizedCell(null);
+      expect(res).toBeDefined();
+    });
+
+    it('renders object with locales as localized tags', () => {
+      const localized = { en: 'Hello', ru: 'Привет' };
+      const res = renderLocalizedCell(localized);
+      expect(res).toBeDefined();
+    });
+  });
+
+  describe('sortAttributesByDefaultOrder', () => {
+    it('places Uid type attribute first and name attribute second', () => {
+      const attributes: Attribute[] = [
+        { id: 'age', type: 'integer', unique: false, required: false },
+        { id: 'name', type: 'text', unique: false, required: true },
+        { id: 'slug', type: 'uid', unique: true, required: true },
+      ];
+      const sorted = sortAttributesByDefaultOrder(attributes);
+      expect(sorted.map((a) => a.id)).toEqual(['slug', 'name', 'age']);
+    });
+
+    it('uses first unique attribute if neither Uid type nor name field exists', () => {
+      const attributes: Attribute[] = [
+        { id: 'age', type: 'integer', unique: false, required: false },
+        { id: 'email', type: 'text', unique: true, required: true },
+        { id: 'title', type: 'text', unique: false, required: false },
+      ];
+      const sorted = sortAttributesByDefaultOrder(attributes);
+      expect(sorted.map((a) => a.id)).toEqual(['email', 'age', 'title']);
+    });
+
+    it('places Uid type first even if unique attribute exists when name is absent', () => {
+      const attributes: Attribute[] = [
+        { id: 'email', type: 'text', unique: true, required: true },
+        { id: 'code', type: 'uid', unique: false, required: true },
+      ];
+      const sorted = sortAttributesByDefaultOrder(attributes);
+      expect(sorted.map((a) => a.id)).toEqual(['code', 'email']);
+    });
+  });
+
+  describe('primary field helpers and getDocumentLabel', () => {
+    it('extracts primary field value based on schema attributes', () => {
+      const attributes: Attribute[] = [
+        { id: 'age', type: 'integer', unique: false, required: false },
+        { id: 'full_name', type: 'text', unique: true, required: true },
+      ];
+      const doc: DocumentRecord = {
+        id: 1,
+        documentId: 'doc-999',
+        status: 'published',
+        createdAt: '',
+        updatedAt: '',
+        publishedAt: '',
+        age: 25,
+        full_name: 'John Smith',
+      };
+      expect(getPrimaryFieldValue(doc, attributes)).toBe('John Smith');
+    });
+
+    it('handles localized object primary fields', () => {
+      const attributes: Attribute[] = [
+        { id: 'title', type: 'localizedText', unique: false, required: true },
+      ];
+      const doc: DocumentRecord = {
+        id: 1,
+        documentId: 'doc-888',
+        status: 'published',
+        createdAt: '',
+        updatedAt: '',
+        publishedAt: '',
+        title: { en: 'English Title', ru: 'Заголовок' },
+      };
+      expect(getPrimaryFieldValue(doc, attributes)).toBe('English Title');
+    });
+
+    it('formats document label with primary field and short document ID', () => {
+      const attributes: Attribute[] = [
+        { id: 'slug', type: 'uid', unique: true, required: true },
+      ];
+      const doc: DocumentRecord = {
+        id: 1,
+        documentId: 'abc-123456789',
+        status: 'draft',
+        createdAt: '',
+        updatedAt: '',
+        publishedAt: null,
+        slug: 'my-first-post',
+      };
+      expect(getDocumentLabel(doc, attributes)).toBe('my-first-post (abc-1234…)');
     });
   });
 });

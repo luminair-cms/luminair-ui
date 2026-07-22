@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { Form, Select, Space, Tag, Typography } from 'antd';
-import { RelationAttribute } from '@/features/schemas';
+import { RelationAttribute, useDetailedDocumentType } from '@/features/schemas';
 import { useDocumentSearch } from '../hooks/useDocuments';
 import { toLabel, getDocumentLabel } from '../helpers';
 
@@ -14,7 +14,10 @@ export const RelationField: FC<RelationFieldProps> = ({ attr }) => {
   const isOwning = attr.relation === 'hasOne' || attr.relation === 'hasMany';
   const isMultiple = attr.relation === 'hasMany';
 
-  const { data: docs, isLoading } = useDocumentSearch(isOwning ? attr.target : undefined);
+  const { data: targetSchema } = useDetailedDocumentType(isOwning ? attr.target : undefined);
+  const { data: docs, isLoading: docsLoading } = useDocumentSearch(
+    isOwning ? attr.target : undefined,
+  );
 
   if (!isOwning) {
     return (
@@ -32,7 +35,7 @@ export const RelationField: FC<RelationFieldProps> = ({ attr }) => {
 
   const options = (docs ?? []).map((doc) => ({
     value: String(doc.documentId),
-    label: getDocumentLabel(doc),
+    label: getDocumentLabel(doc, targetSchema),
   }));
 
   return (
@@ -50,10 +53,10 @@ export const RelationField: FC<RelationFieldProps> = ({ attr }) => {
       <Select
         mode={isMultiple ? 'multiple' : undefined}
         options={options}
-        loading={isLoading}
+        loading={docsLoading}
         allowClear
         showSearch
-        placeholder={isLoading ? 'Loading…' : `Select ${attr.target}…`}
+        placeholder={docsLoading ? 'Loading…' : `Select ${attr.target}…`}
         filterOption={(input, option) =>
           String(option?.label ?? '')
             .toLowerCase()

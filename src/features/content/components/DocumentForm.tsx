@@ -31,7 +31,13 @@ import {
 } from '../hooks/useDocumentMutations';
 import { DocumentFormField } from './DocumentFormField';
 import { RelationField } from './RelationField';
-import { documentToFormValues, coerceValue, getTypeName } from '../helpers';
+import {
+  documentToFormValues,
+  coerceValue,
+  getTypeName,
+  sortAttributesByDefaultOrder,
+  getPrimaryFieldValue,
+} from '../helpers';
 import { useDocumentStore } from '../store/useDocumentStore';
 
 const { Title, Paragraph } = Typography;
@@ -56,6 +62,10 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
   const publishMutation = usePublishDocument(apiId, documentId);
 
   const localizations = useMemo(() => schema?.options?.localizations ?? [], [schema]);
+  const sortedAttributes = useMemo(
+    () => (schema ? sortAttributesByDefaultOrder(schema.attributes) : []),
+    [schema],
+  );
 
   // Zustand Store variables & actions
   const initStore = useDocumentStore((state) => state.initStore);
@@ -200,6 +210,11 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
   // Save Changes is disabled for existing records until the user makes a change
   const isSaveDisabled = !isNew && !isDirty;
 
+  const primaryValue = getPrimaryFieldValue(document, schema.attributes);
+  const headerTitle = isNew
+    ? `Create New ${schema.info.singularName}`
+    : primaryValue || `Edit ${schema.info.singularName}`;
+
   return (
     <div style={{ width: '100%' }}>
       {/* Header and Breadcrumbs */}
@@ -208,7 +223,7 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
           items={[
             { title: <Link to="/">Home</Link> },
             { title: <Link to={`/documents/${apiId}`}>{schema.title}</Link> },
-            { title: isNew ? 'Create New' : documentId },
+            { title: isNew ? 'Create New' : primaryValue || documentId },
           ]}
           style={{ marginBottom: 12 }}
         />
@@ -224,9 +239,7 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
           <div>
             <Space align="center" size={12}>
               <Title level={2} style={{ margin: 0 }}>
-                {isNew
-                  ? `Create New ${schema.info.singularName}`
-                  : `Edit ${schema.info.singularName}`}
+                {headerTitle}
               </Title>
               {!isNew && schema.options?.draftAndPublish && (
                 <Tag
@@ -320,7 +333,7 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
           scrollToFirstError
         >
           {/* Field attributes */}
-          {schema.attributes
+          {sortedAttributes
             .filter((a) => !isRelationAttribute(a))
             .map((attr) => (
               <DocumentFormField
@@ -331,7 +344,7 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
             ))}
 
           {/* Relation attributes */}
-          {schema.attributes.some((a) => isRelationAttribute(a)) && (
+          {sortedAttributes.some((a) => isRelationAttribute(a)) && (
             <>
               <Divider
                 titlePlacement="left"
@@ -340,7 +353,7 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
               >
                 Relations
               </Divider>
-              {schema.attributes
+              {sortedAttributes
                 .filter((a) => isRelationAttribute(a))
                 .map((attr) => (
                   <RelationField key={attr.id} attr={attr as RelationAttribute} />
