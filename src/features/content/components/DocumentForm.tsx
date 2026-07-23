@@ -167,21 +167,12 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
           {
             onSuccess: () => {
               message.success(`${schema.info.singularName} updated successfully!`);
-              // Re-initialize store with the updated values
-              if (document) {
-                const updatedRecord = { ...document, ...data };
-                for (const [k, v] of Object.entries(data)) {
-                  updatedRecord[k] = v;
-                  updatedRecord[snakeToCamel(k)] = v;
-                }
-                initStore(schema, updatedRecord, false);
-              }
             },
           },
         );
       }
     },
-    [schema, isNew, createMutation, updateMutation, apiId, navigate, document, initStore],
+    [schema, isNew, createMutation, updateMutation, apiId, navigate],
   );
 
   const handlePublish = useCallback(() => {

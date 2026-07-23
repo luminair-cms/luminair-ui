@@ -28,11 +28,10 @@ export const useCreateDocument = (apiId: string | undefined) => {
 export const useUpdateDocument = (apiId: string | undefined, documentId: string | undefined) => {
   const queryClient = useQueryClient();
 
-  return useMutation<DocumentRecord, ProblemDetails, { data: Record<string, unknown> }>({
+  return useMutation<void, ProblemDetails, { data: Record<string, unknown> }>({
     mutationFn: async (payload) => {
       if (!apiId || !documentId) throw new Error('apiId and documentId are required to update');
-      const { data } = await documentApi.updateDocument(apiId, documentId, payload);
-      return data;
+      await documentApi.updateDocument(apiId, documentId, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
@@ -47,11 +46,10 @@ export const useUpdateDocument = (apiId: string | undefined, documentId: string 
 export const usePublishDocument = (apiId: string | undefined, documentId: string | undefined) => {
   const queryClient = useQueryClient();
 
-  return useMutation<DocumentRecord, ProblemDetails, void>({
+  return useMutation<void, ProblemDetails, void>({
     mutationFn: async () => {
       if (!apiId || !documentId) throw new Error('apiId and documentId are required to publish');
-      const { data } = await documentApi.publishDocument(apiId, documentId);
-      return data;
+      await documentApi.publishDocument(apiId, documentId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents', apiId] });
