@@ -7,4 +7,6 @@ export { SchemaOverview } from './components/SchemaOverview';
 export { SchemaList } from './components/SchemaList';
 
 export { useDocumentTypes, useDetailedDocumentType } from './hooks/useSchemas';
+export { useUiConfig, useUpdateUiConfig } from './hooks/useUiConfig';
+export { uiConfigApi } from './services/uiConfigApi';
 export * from './types';

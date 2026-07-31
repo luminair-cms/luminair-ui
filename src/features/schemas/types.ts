@@ -43,3 +43,34 @@ export interface DetailedDocumentResponse {
   options: DocumentOptions | null;
   attributes: Attribute[];
 }
+
+export interface FieldViewConfig {
+  attributeId: string;
+  label?: string;
+  description?: string;
+  placeholder?: string;
+  editable?: boolean;
+  size?: 50 | 100;
+}
+
+export interface RelationViewConfig {
+  attributeId: string;
+  displayMode: 'inline' | 'block';
+  /**
+   * Ordered list of fields to display:
+   * - displayFields[0]: Primary title/label
+   * - displayFields[1..3]: Additional preview fields for 'block' mode (max 3 preview fields)
+   */
+  displayFields: string[];
+}
+
+export interface ContentTypeViewConfig {
+  apiId: string;
+  settings: {
+    mainField: string;
+  };
+  layouts: {
+    edit: FieldViewConfig[];
+    relations: RelationViewConfig[];
+  };
+}
