@@ -4,6 +4,8 @@ import {
   Typography,
   Button,
   Card,
+  Col,
+  Row,
   Space,
   Spin,
   Empty,
@@ -90,12 +92,13 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
   const setFieldValuePath = useDocumentStore((state) => state.setFieldValuePath);
   const isDirty = useDocumentStore((state) => state.isDirty);
   const resetStore = useDocumentStore((state) => state.reset);
+  const initialValues = useDocumentStore((state) => state.initialValues);
 
   // Load document values into form and reset/initialize Zustand store
   useEffect(() => {
     if (document && schema && !isNew) {
-      const initialValues = documentToFormValues(document, schema.attributes);
-      form.setFieldsValue(initialValues);
+      const formValues = documentToFormValues(document, schema.attributes);
+      form.setFieldsValue(formValues);
       initStore(schema, document, false);
     } else if (isNew && schema) {
       form.resetFields();
@@ -112,67 +115,81 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
 
   const onFinish = useCallback(
     (values: Record<string, unknown>) => {
-      if (!schema) return;
+      try {
+        if (!schema) return;
 
-      const data: Record<string, unknown> = {};
+        const data: Record<string, unknown> = {};
 
-      for (const attr of schema.attributes) {
-        if (isRelationAttribute(attr)) {
-          const isOwning = attr.relation === 'hasOne' || attr.relation === 'hasMany';
-          if (!isOwning) continue;
+        for (const attr of schema.attributes) {
+          if (isRelationAttribute(attr)) {
+            const isOwning = attr.relation === 'hasOne' || attr.relation === 'hasMany';
+            if (!isOwning) continue;
 
-          const val = values[attr.id];
-          const initialVal = initialValues[attr.id];
+            const val = values[attr.id];
+            const initialVal = initialValues[attr.id];
 
-          // For existing documents, skip relation payloads if relation was unchanged
-          if (!isNew && String(val ?? '') === String(initialVal ?? '')) {
-            continue;
-          }
+            // For existing documents, skip relation payloads if relation was unchanged.
+            // Compare as sorted comma-separated strings so array order doesn't matter.
+            if (!isNew) {
+              const toSortedStr = (v: unknown) =>
+                Array.isArray(v)
+                  ? [...v]
+                      .map(String)
+                      .sort()
+                      .join(',')
+                  : String(v ?? '');
+              if (toSortedStr(val) === toSortedStr(initialVal)) {
+                continue;
+              }
+            }
 
-          if (val !== undefined && val !== null && val !== '') {
-            const ids = Array.isArray(val) ? val.filter(Boolean) : [val];
-            if (ids.length > 0) {
-              data[attr.id] = { connect: ids };
+            if (val !== undefined && val !== null && val !== '') {
+              const ids = Array.isArray(val) ? val.filter(Boolean) : [val];
+              if (ids.length > 0) {
+                data[attr.id] = { connect: ids };
+              } else {
+                data[attr.id] = { disconnect: [] };
+              }
             } else {
-              data[attr.id] = { disconnect: [] };
+              data[attr.id] = { disconnect: [] }; // disconnect all if cleared
             }
           } else {
-            data[attr.id] = { disconnect: [] }; // disconnect all if cleared
+            const typeName = getTypeName(attr.type);
+            if (typeName === 'uuid') continue;
+
+            const raw = values[attr.id];
+            if (raw === undefined || raw === null) continue;
+
+            data[attr.id] = coerceValue(typeName, raw);
           }
-        } else {
-          const typeName = getTypeName(attr.type);
-          if (typeName === 'uuid') continue;
-
-          const raw = values[attr.id];
-          if (raw === undefined || raw === null) continue;
-
-          data[attr.id] = coerceValue(typeName, raw);
         }
-      }
 
-      if (isNew) {
-        createMutation.mutate(
-          { data },
-          {
-            onSuccess: (newDocId) => {
-              message.success(`${schema.info.singularName} created successfully!`);
-              // Smooth/invisible transition to editing mode
-              navigate(`/documents/${apiId}/${newDocId}`, { replace: true });
+        if (isNew) {
+          createMutation.mutate(
+            { data },
+            {
+              onSuccess: (newDocId) => {
+                message.success(`${schema.info.singularName} created successfully!`);
+                // Smooth/invisible transition to editing mode
+                navigate(`/documents/${apiId}/${newDocId}`, { replace: true });
+              },
             },
-          },
-        );
-      } else {
-        updateMutation.mutate(
-          { data },
-          {
-            onSuccess: () => {
-              message.success(`${schema.info.singularName} updated successfully!`);
+          );
+        } else {
+          updateMutation.mutate(
+            { data },
+            {
+              onSuccess: () => {
+                message.success(`${schema.info.singularName} updated successfully!`);
+              },
             },
-          },
-        );
+          );
+        }
+      } catch (err) {
+        message.error(`Unexpected error preparing save: ${err instanceof Error ? err.message : String(err)}`);
       }
     },
-    [schema, isNew, createMutation, updateMutation, apiId, navigate],
+    [schema, isNew, initialValues, createMutation, updateMutation, apiId, navigate],
   );
 
   const handlePublish = useCallback(() => {
@@ -241,14 +258,24 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
     <div style={{ width: '100%' }}>
       {/* Header and Breadcrumbs */}
       <div style={{ marginBottom: 24 }}>
-        <Breadcrumb
-          items={[
-            { title: <Link to="/">Home</Link> },
-            { title: <Link to={`/documents/${apiId}`}>{schema.title}</Link> },
-            { title: isNew ? 'Create New' : primaryValue || documentId },
-          ]}
-          style={{ marginBottom: 12 }}
-        />
+        {/* Back icon + Breadcrumb row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <Link to={`/documents/${apiId}`}>
+            <Button
+              type="text"
+              size="large"
+              icon={<ArrowLeftOutlined style={{ fontSize: 18 }} />}
+              style={{ display: 'flex', alignItems: 'center', padding: '0 4px' }}
+            />
+          </Link>
+          <Breadcrumb
+            items={[
+              { title: <Link to="/">Home</Link> },
+              { title: <Link to={`/documents/${apiId}`}>{schema.title}</Link> },
+              { title: isNew ? 'Create New' : primaryValue || documentId },
+            ]}
+          />
+        </div>
         <div
           style={{
             display: 'flex',
@@ -283,9 +310,6 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
             </Paragraph>
           </div>
           <Space>
-            <Link to={`/documents/${apiId}`}>
-              <Button icon={<ArrowLeftOutlined />}>Back</Button>
-            </Link>
             {!isNew && (
               <Popconfirm
                 title="Delete document"
@@ -329,6 +353,7 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
         </div>
       </div>
 
+
       {errorMessage && (
         <Alert type="error" message={errorMessage} showIcon closable style={{ marginBottom: 20 }} />
       )}
@@ -368,18 +393,21 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
           }}
           scrollToFirstError
         >
-          {/* Field attributes */}
-          {sortedAttributes
-            .filter((a) => !isRelationAttribute(a))
-            .map((attr) => (
-              <DocumentFormField
-                key={attr.id}
-                attr={attr as FieldAttribute}
-                localizations={localizations}
-              />
-            ))}
+          {/* Field attributes — 2-column grid */}
+          <Row gutter={[24, 0]}>
+            {sortedAttributes
+              .filter((a) => !isRelationAttribute(a))
+              .map((attr) => (
+                <Col key={attr.id} xs={24} md={12}>
+                  <DocumentFormField
+                    attr={attr as FieldAttribute}
+                    localizations={localizations}
+                  />
+                </Col>
+              ))}
+          </Row>
 
-          {/* Relation attributes */}
+          {/* Relation attributes — 2-column grid */}
           {sortedAttributes.some((a) => isRelationAttribute(a)) && (
             <>
               <Divider
@@ -389,11 +417,15 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
               >
                 Relations
               </Divider>
-              {sortedAttributes
-                .filter((a) => isRelationAttribute(a))
-                .map((attr) => (
-                  <RelationField key={attr.id} attr={attr as RelationAttribute} />
-                ))}
+              <Row gutter={[24, 0]}>
+                {sortedAttributes
+                  .filter((a) => isRelationAttribute(a))
+                  .map((attr) => (
+                    <Col key={attr.id} xs={24} md={12}>
+                      <RelationField attr={attr as RelationAttribute} />
+                    </Col>
+                  ))}
+              </Row>
             </>
           )}
         </Form>

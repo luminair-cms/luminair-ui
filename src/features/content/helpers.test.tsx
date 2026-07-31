@@ -242,7 +242,7 @@ describe('content helpers', () => {
       expect(getPrimaryFieldValue(doc, attributes)).toBe('English Title');
     });
 
-    it('formats document label with primary field and short document ID', () => {
+    it('formats document label with primary field value only (no short ID)', () => {
       const attributes: Attribute[] = [
         { id: 'slug', type: 'uid', unique: true, required: true },
       ];
@@ -255,7 +255,7 @@ describe('content helpers', () => {
         publishedAt: null,
         slug: 'my-first-post',
       };
-      expect(getDocumentLabel(doc, attributes)).toBe('my-first-post (abc-1234…)');
+      expect(getDocumentLabel(doc, attributes)).toBe('my-first-post');
     });
   });
 });

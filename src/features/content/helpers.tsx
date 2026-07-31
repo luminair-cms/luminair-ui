@@ -181,7 +181,7 @@ export const getPrimaryFieldValue = (
 
 /**
  * Formats a document record for relation select dropdown display.
- * Format: "<PrimaryFieldValue> (<shortDocumentId>…)"
+ * Returns the primary field value, or the raw documentId as a fallback.
  */
 export const getDocumentLabel = (
   doc: DocumentRecord | null | undefined,
@@ -192,11 +192,7 @@ export const getDocumentLabel = (
     ? schemaOrAttributes
     : schemaOrAttributes?.attributes;
   const primaryVal = getPrimaryFieldValue(doc, attributes);
-  const shortId = doc.documentId ? `${String(doc.documentId).slice(0, 8)}…` : '';
-
-  if (primaryVal) {
-    return shortId ? `${primaryVal} (${shortId})` : primaryVal;
-  }
+  if (primaryVal) return primaryVal;
   return String(doc.documentId);
 };
 
