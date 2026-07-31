@@ -27,6 +27,7 @@ import {
   RelationAttribute,
 } from '@/features/schemas';
 import { useDocument } from '../hooks/useDocuments';
+import { DocumentHeaderActions } from './DocumentHeaderActions';
 import {
   useCreateDocument,
   useUpdateDocument,
@@ -306,24 +307,10 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
               )}
             </Space>
             <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 0 }}>
-              {isNew ? 'Fill in the fields to create a new record.' : `Document ID: ${documentId}`}
+              {isNew ? 'Fill in the fields to create a new record.' : 'Edit existing document record.'}
             </Paragraph>
           </div>
           <Space>
-            {!isNew && (
-              <Popconfirm
-                title="Delete document"
-                description="Are you sure you want to delete this document? This action cannot be undone."
-                onConfirm={handleDelete}
-                okText="Delete"
-                okButtonProps={{ danger: true, loading: deleteMutation.isPending }}
-                cancelText="Cancel"
-              >
-                <Button danger icon={<DeleteOutlined />}>
-                  Delete
-                </Button>
-              </Popconfirm>
-            )}
             {!isNew && schema.options?.draftAndPublish && (
               <Button
                 type="default"
@@ -349,6 +336,14 @@ export const DocumentForm: FC<DocumentFormProps> = ({ apiId, documentId }) => {
             >
               {isNew ? 'Create' : 'Save Changes'}
             </Button>
+            <DocumentHeaderActions
+              apiId={apiId!}
+              documentId={documentId}
+              document={document}
+              isNew={isNew}
+              onDelete={handleDelete}
+              deletePending={deleteMutation.isPending}
+            />
           </Space>
         </div>
       </div>
