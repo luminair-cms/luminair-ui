@@ -13,6 +13,9 @@ const DocumentListView = lazy(() => import('@/pages/DocumentListView'));
 const SchemaInspector = lazy(() => import('@/pages/SchemaInspector'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const DocumentEditView = lazy(() => import('@/pages/DocumentEditView'));
+const ConfigureViewPage = lazy(() =>
+  import('@/pages/ConfigureViewPage').then((m) => ({ default: m.ConfigureViewPage })),
+);
 
 const routeFallback = (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
@@ -39,6 +42,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={routeFallback}>
             <DocumentListView />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'documents/:apiId/settings/configure-view',
+        element: (
+          <Suspense fallback={routeFallback}>
+            <ConfigureViewPage />
           </Suspense>
         ),
       },
