@@ -13,10 +13,11 @@ Luminair UI is the frontend administration panel for the Luminair Schema-Driven 
 - **Data Fetching & Cache**: TanStack Query (React Query)
 - **State Management**: Zustand (for UI states, selected locales)
 
-### Core Architectural Principle: Schema-Driven Rendering
+### Core Architectural Principle: Schema-Driven & View-Configured Rendering
 Luminair UI does not hardcode forms for collections. Instead:
-1. It queries the backend schemas endpoint to retrieve registered `DocumentType` configurations.
-2. It dynamically builds list tables, pagination controls, search/sort filters, and creation/editing forms based on the fields, constraints, and relations defined in the retrieved schemas using Ant Design's configurable components.
+1. It queries the backend schemas endpoint (`/api/meta/documents`) to retrieve registered `DocumentType` configurations.
+2. It queries `/api/ui/views/:api_id` to retrieve custom presentation preferences (custom field labels, placeholders, element widths `50%`/`100%`, and inline/block relation rendering modes).
+3. It dynamically builds creation/editing forms (`DocumentForm`), header actions (`DocumentHeaderActions`), relation renderers (`InlineRelationField` & `BlockRelationField`), and layout customization editors (`ConfigureViewPage`) using Ant Design's configurable components.
 
 ---
 
