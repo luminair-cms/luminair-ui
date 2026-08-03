@@ -22,12 +22,11 @@ import {
   useUpdateUiConfig,
   ContentTypeViewConfig,
   FieldViewConfig,
-  RelationViewConfig,
+  RelationAppearance,
   isRelationAttribute,
-  RelationAttribute,
 } from '@/features/schemas';
 import { ScalarFieldConfigModal } from '@/features/schemas/components/ScalarFieldConfigModal';
-import { RelationConfigModal } from '@/features/schemas/components/RelationConfigModal';
+import { RelationAppearanceModal } from '@/features/schemas/components/RelationConfigModal';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -44,7 +43,7 @@ export const ConfigureViewPage: FC = () => {
 
   // Edit modals state
   const [editingScalar, setEditingScalar] = useState<FieldViewConfig | null>(null);
-  const [editingRelation, setEditingRelation] = useState<RelationViewConfig | null>(null);
+  const [appearanceModalOpen, setAppearanceModalOpen] = useState(false);
 
   useEffect(() => {
     if (uiConfig) {
@@ -87,21 +86,13 @@ export const ConfigureViewPage: FC = () => {
     setEditingScalar(null);
   };
 
-  const handleUpdateRelation = (updated: RelationViewConfig) => {
-    setLocalConfig((prev) => {
-      if (!prev) return prev;
-      const relations = prev.layouts.relations.map((r) =>
-        r.attributeId === updated.attributeId ? updated : r,
-      );
-      return { ...prev, layouts: { ...prev.layouts, relations } };
-    });
-    setEditingRelation(null);
+  const handleUpdateAppearance = (updated: RelationAppearance) => {
+    setLocalConfig((prev) => (prev ? { ...prev, relationAppearance: updated } : prev));
+    setAppearanceModalOpen(false);
   };
 
-  // Find target schema for relation modal
-  const editingRelAttr = (schema?.attributes ?? []).find(
-    (a) => isRelationAttribute(a) && a.id === editingRelation?.attributeId,
-  ) as RelationAttribute | undefined;
+  const { relationAppearance } = localConfig;
+  const relationFields = schema?.attributes.filter(isRelationAttribute) ?? [];
 
   return (
     <div style={{ width: '100%', maxWidth: 1100, margin: '0 auto' }}>
@@ -171,7 +162,7 @@ export const ConfigureViewPage: FC = () => {
                 options={scalarOptions}
                 onChange={(val) =>
                   setLocalConfig((prev) =>
-                    prev ? { ...prev, settings: { ...prev, mainField: val } } : prev,
+                    prev ? { ...prev, settings: { ...prev.settings, mainField: val } } : prev,
                   )
                 }
               />
@@ -181,7 +172,7 @@ export const ConfigureViewPage: FC = () => {
       </Card>
 
       {/* View Layout Section */}
-      <Card title="View Layout">
+      <Card title="View Layout" style={{ marginBottom: 24 }}>
         <Title level={5} style={{ marginTop: 0, marginBottom: 16 }}>
           Displayed Fields
         </Title>
@@ -219,46 +210,29 @@ export const ConfigureViewPage: FC = () => {
           ))}
         </Row>
 
-        {localConfig.layouts.relations.length > 0 && (
+        {relationFields.length > 0 && (
           <>
-            <Divider titlePlacement="left" plain style={{ margin: '32px 0 16px' }}>
-              Relations Layout
+            <Divider titlePlacement="left" plain style={{ margin: '32px 0 8px' }}>
+              Relations
             </Divider>
-            <Row gutter={[16, 16]}>
-              {localConfig.layouts.relations.map((rel) => (
-                <Col key={rel.attributeId} xs={24} md={12}>
+            <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 12 }}>
+              Relation fields defined on this type. Their display order follows the schema definition.
+            </Text>
+            <Row gutter={[16, 8]}>
+              {relationFields.map((rel) => (
+                <Col key={rel.id} xs={24} md={12}>
                   <Card
                     size="small"
                     style={{
                       background: token.colorBgContainer,
                       borderColor: token.colorBorderSecondary,
                     }}
-                    extra={
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={<EditOutlined />}
-                        onClick={() => setEditingRelation(rel)}
-                      />
-                    }
                   >
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <Text strong>{rel.attributeId}</Text>
-                        <Tag color={rel.displayMode === 'block' ? 'blue' : 'cyan'}>
-                          {rel.displayMode}
-                        </Tag>
-                      </div>
-                      <Space size={4} wrap>
-                        <Text type="secondary" style={{ fontSize: 11 }}>
-                          Display fields:
-                        </Text>
-                        {rel.displayFields.map((f, idx) => (
-                          <Tag key={f} color={idx === 0 ? 'geekblue' : 'default'} style={{ fontSize: 10 }}>
-                            {idx === 0 ? `Primary: ${f}` : f}
-                          </Tag>
-                        ))}
-                      </Space>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Text strong>{rel.id}</Text>
+                      <Tag color="cyan" style={{ fontSize: 10 }}>
+                        {rel.relation} → {rel.target}
+                      </Tag>
                     </div>
                   </Card>
                 </Col>
@@ -266,6 +240,50 @@ export const ConfigureViewPage: FC = () => {
             </Row>
           </>
         )}
+      </Card>
+
+      {/* Relation Appearance Section */}
+      <Card
+        title="Relation Appearance"
+        extra={
+          <Button
+            type="text"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => setAppearanceModalOpen(true)}
+          >
+            Edit
+          </Button>
+        }
+      >
+        <Paragraph type="secondary" style={{ marginTop: 0, marginBottom: 16 }}>
+          How <Text strong>{schema?.title ?? apiId}</Text> appears when selected as a relation
+          target in another document type's edit form. Configured once, applied everywhere.
+        </Paragraph>
+        <Space size={12} align="center">
+          <Tag
+            color={relationAppearance.displayMode === 'block' ? 'blue' : 'cyan'}
+            style={{ fontSize: 13, padding: '2px 10px' }}
+          >
+            {relationAppearance.displayMode === 'block' ? 'Block (Vertical List)' : 'Inline (Tag / Select)'}
+          </Tag>
+          {relationAppearance.displayMode === 'inline' ? (
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Displays <Text code>{localConfig.settings.mainField}</Text> (Entry Title)
+            </Text>
+          ) : (
+            <Space size={4} wrap>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                Display fields:
+              </Text>
+              {relationAppearance.displayFields.map((f, idx) => (
+                <Tag key={f} color={idx === 0 ? 'geekblue' : 'default'} style={{ fontSize: 11 }}>
+                  {idx === 0 ? `Title: ${f}` : f}
+                </Tag>
+              ))}
+            </Space>
+          )}
+        </Space>
       </Card>
 
       {/* Edit Modals */}
@@ -276,12 +294,13 @@ export const ConfigureViewPage: FC = () => {
         onSave={handleUpdateScalar}
       />
 
-      <RelationConfigModal
-        open={Boolean(editingRelation)}
-        config={editingRelation}
-        targetSchema={useDetailedDocumentType(editingRelAttr?.target).data}
-        onCancel={() => setEditingRelation(null)}
-        onSave={handleUpdateRelation}
+      <RelationAppearanceModal
+        open={appearanceModalOpen}
+        appearance={localConfig.relationAppearance}
+        ownSchema={schema}
+        mainField={localConfig.settings.mainField}
+        onCancel={() => setAppearanceModalOpen(false)}
+        onSave={handleUpdateAppearance}
       />
     </div>
   );

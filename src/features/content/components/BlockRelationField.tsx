@@ -1,7 +1,7 @@
 import { FC, useMemo } from 'react';
 import { Form, Select, Space, Tag, Typography, Card, Button, theme } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
-import { RelationAttribute, RelationViewConfig, useDetailedDocumentType } from '@/features/schemas';
+import { RelationAttribute, RelationAppearance, useDetailedDocumentType } from '@/features/schemas';
 import { useDocumentSearch } from '../hooks/useDocuments';
 import { DocumentRecord } from '../types';
 import { toLabel } from '../helpers';
@@ -21,14 +21,14 @@ const STATUS_COLOR: Record<DocStatus, string> = {
 
 export interface BlockRelationFieldProps {
   attr: RelationAttribute;
-  config?: RelationViewConfig;
+  appearance?: Extract<RelationAppearance, { displayMode: 'block' }>;
   label?: string;
   description?: string;
 }
 
 export const BlockRelationField: FC<BlockRelationFieldProps> = ({
   attr,
-  config,
+  appearance,
   label,
   description,
 }) => {
@@ -38,8 +38,8 @@ export const BlockRelationField: FC<BlockRelationFieldProps> = ({
   const { data: targetSchema } = useDetailedDocumentType(attr.target);
   const { data: docs, isLoading: docsLoading } = useDocumentSearch(attr.target);
 
-  const displayFields = config?.displayFields && config.displayFields.length > 0
-    ? config.displayFields
+  const displayFields = appearance?.displayFields && appearance.displayFields.length > 0
+    ? appearance.displayFields
     : ['name'];
   const primaryField = displayFields[0];
   const previewFields = displayFields.slice(1, 4);

@@ -1,5 +1,4 @@
 import { FC } from 'react';
-import { useParams } from 'react-router-dom';
 import { Form, Tag, Typography } from 'antd';
 import { RelationAttribute, useUiConfig } from '@/features/schemas';
 import { InlineRelationField } from './InlineRelationField';
@@ -13,10 +12,10 @@ export interface RelationFieldProps {
 }
 
 export const RelationField: FC<RelationFieldProps> = ({ attr }) => {
-  const { apiId } = useParams<{ apiId: string }>();
   const isOwning = attr.relation === 'hasOne' || attr.relation === 'hasMany';
 
-  const { data: uiConfig } = useUiConfig(apiId);
+  // Fetch the TARGET type's config — it declares how it wants to appear in relation fields.
+  const { data: targetConfig } = useUiConfig(attr.target);
 
   if (!isOwning) {
     return (
@@ -32,13 +31,13 @@ export const RelationField: FC<RelationFieldProps> = ({ attr }) => {
     );
   }
 
-  const relConfig = uiConfig?.layouts?.relations?.find(
-    (r) => r.attributeId === attr.id,
-  );
+  const appearance = targetConfig?.relationAppearance;
 
-  if (relConfig?.displayMode === 'block') {
-    return <BlockRelationField attr={attr} config={relConfig} />;
+  if (appearance?.displayMode === 'block') {
+    return <BlockRelationField attr={attr} appearance={appearance} />;
   }
 
+  // Inline mode: InlineRelationField already uses targetSchema's primary field via getDocumentLabel.
   return <InlineRelationField attr={attr} />;
 };
+

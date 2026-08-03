@@ -53,24 +53,37 @@ export interface FieldViewConfig {
   size?: 50 | 100;
 }
 
-export interface RelationViewConfig {
-  attributeId: string;
-  displayMode: 'inline' | 'block';
-  /**
-   * Ordered list of fields to display:
-   * - displayFields[0]: Primary title/label
-   * - displayFields[1..3]: Additional preview fields for 'block' mode (max 3 preview fields)
-   */
-  displayFields: string[];
-}
+/**
+ * How this document type appears when rendered inside a relation field on another type's edit form.
+ *
+ * - `inline`: Compact tag/select widget. Displays only `settings.mainField`. No extra config.
+ * - `block`:  Strapi-style vertical card list. Displays 1–3 chosen scalar fields.
+ */
+export type RelationAppearance =
+  | { displayMode: 'inline' }
+  | {
+      displayMode: 'block';
+      /**
+       * Ordered list of this type's own scalar field IDs to show in the relation card.
+       * Must contain 1 to 3 elements:
+       * - displayFields[0]: Primary card title
+       * - displayFields[1..2]: Optional preview sub-badges
+       */
+      displayFields: [string, ...string[]];
+    };
 
 export interface ContentTypeViewConfig {
   apiId: string;
   settings: {
+    /** Primary field used for title rendering and as the sole display field in inline relation mode. */
     mainField: string;
   };
   layouts: {
     edit: FieldViewConfig[];
-    relations: RelationViewConfig[];
   };
+  /**
+   * How this document type appears when displayed in any relation field across the system.
+   * Configured once here; automatically applied everywhere this type is used as a relation target.
+   */
+  relationAppearance: RelationAppearance;
 }
